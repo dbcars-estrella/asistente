@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -13,7 +14,7 @@
         .user-message { background-color: var(--user-bubble); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
         .bot-message { background-color: var(--bot-bubble); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
         
-        .controls { background: #ffffff; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; box-shadow: 0 -1px 5px rgba(0,0,0,0.1); flex-shrink: 0; padding-bottom: max(20px, env(safe-area-inset-bottom)); }
+        .controls { background: #ffffff; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 -1px 5px rgba(0,0,0,0.1); flex-shrink: 0; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
         .status { font-size: 14px; color: #666; font-weight: 500; height: 20px; }
         
         .mic-btn { 
@@ -24,6 +25,12 @@
         .mic-btn:active { transform: scale(0.9); }
         .mic-btn.listening { background: #ff3b30; animation: pulse 1.5s infinite; box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4); }
         .mic-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+        
+        .repeat-btn {
+            background: #5856d6; color: white; border: none; border-radius: 15px; padding: 8px 15px; 
+            font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 5px;
+        }
+        .repeat-btn:active { transform: scale(0.95); }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
@@ -38,6 +45,7 @@
     <div class="controls">
         <div class="status" id="statusText">Toca el micrófono para hablar</div>
         <button class="mic-btn" id="micBtn">🎤</button>
+        <button class="repeat-btn" id="repeatBtn">🔊 Repetir última voz</button>
     </div>
 
     <script>
@@ -71,7 +79,6 @@
             if (proc.match(/(que me gusta|mi preferencia)/)) return userPref ? 'Te gusta ' + userPref + '.' : 'No tengo preferencias tuyas guardadas. Dime: "Me gusta la música".';
             if (proc.match(/(hola|buenas|saludos)/)) return userName ? '¡Hola, ' + userName + '! ¿En qué puedo ayudarte?' : '¡Hola! Soy tu asistente. ¿En qué puedo ayudarte?';
             if (proc.includes('hora')) { const d = new Date(); return 'Ahora son las ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0'); }
-            if (proc.split(/\s+/).length > 6) return 'Has dicho: "' + raw + '". ¿Quieres que lo resuma o que lo explique?';
             return 'No estoy seguro de entender eso. ¿Puedes pedirlo de otra forma o decirme un dato como "Tengo 30 años"?';
         }
         
@@ -80,22 +87,32 @@
         if (window.speechSynthesis) { window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }
         
         let isSpeaking = false;
+        let lastSpokenText = '';
+
         function speak(text) {
             if (!window.speechSynthesis) return;
-            window.speechSynthesis.cancel();
+            window.speechSynthesis.cancel(); // Detener cualquier voz anterior
+            
             isSpeaking = true;
+            lastSpokenText = text;
             document.getElementById('statusText').textContent = 'Hablando...';
             
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = 'es-ES'; u.rate = 1.0;
-            const spanishVoice = voices.find(v => v.lang.startsWith('es'));
-            if (spanishVoice) u.voice = spanishVoice;
-            
-            u.onend = () => {
-                isSpeaking = false;
-                document.getElementById('statusText').textContent = 'Toca el micrófono para hablar';
-            };
-            window.speechSynthesis.speak(u);
+            // Truco para Safari en iOS: Forzar la reactivación del motor de voz
+            setTimeout(() => {
+                const u = new SpeechSynthesisUtterance(text);
+                u.lang = 'es-ES'; 
+                u.rate = 1.0;
+                const spanishVoice = voices.find(v => v.lang.startsWith('es'));
+                if (spanishVoice) u.voice = spanishVoice;
+                
+                u.onend = () => {
+                    isSpeaking = false;
+                    document.getElementById('statusText').textContent = 'Toca el micrófono para hablar';
+                };
+                window.speechSynthesis.speak(u);
+                // Segundo truco: forzar la reproducción si Safari la ha pausado
+                window.speechSynthesis.resume();
+            }, 100);
         }
         
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -123,7 +140,6 @@
                 isListening = false; 
                 document.getElementById('micBtn').classList.remove('listening'); 
                 document.getElementById('statusText').textContent = 'Error. Toca para reintentar';
-                if (event.error === 'not-allowed') addMessage('Bot', '⚠️ Necesito permiso para usar el micrófono.');
             };
             
             recognition.onend = () => { 
@@ -151,6 +167,12 @@
                 recognition.start();
             }
         });
+
+        document.getElementById('repeatBtn').addEventListener('click', () => {
+            if (lastSpokenText) {
+                speak(lastSpokenText);
+            }
+        });
         
         const chatContainer = document.getElementById('chatContainer');
         
@@ -171,3 +193,4 @@
     </script>
 </body>
 </html>
+
