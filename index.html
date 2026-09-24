@@ -1,5 +1,4 @@
-html
-<!DOCTYPE html>
+DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -27,8 +26,8 @@ html
         .mic-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
         
         .repeat-btn {
-            background: #5856d6; color: white; border: none; border-radius: 15px; padding: 8px 15px; 
-            font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 5px;
+            background: #5856d6; color: white; border: none; border-radius: 15px; padding: 10px 20px; 
+            font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;
         }
         .repeat-btn:active { transform: scale(0.95); }
         
@@ -45,7 +44,7 @@ html
     <div class="controls">
         <div class="status" id="statusText">Toca el micrófono para hablar</div>
         <button class="mic-btn" id="micBtn">🎤</button>
-        <button class="repeat-btn" id="repeatBtn">🔊 Repetir última voz</button>
+        <button class="repeat-btn" id="repeatBtn">🔊 Probar sonido / Repetir</button>
     </div>
 
     <script>
@@ -91,13 +90,13 @@ html
 
         function speak(text) {
             if (!window.speechSynthesis) return;
-            window.speechSynthesis.cancel(); // Detener cualquier voz anterior
+            window.speechSynthesis.cancel(); 
             
             isSpeaking = true;
             lastSpokenText = text;
             document.getElementById('statusText').textContent = 'Hablando...';
             
-            // Truco para Safari en iOS: Forzar la reactivación del motor de voz
+            // RETARDO CRÍTICO: iOS necesita 600ms para soltar el micrófono antes de usar el altavoz
             setTimeout(() => {
                 const u = new SpeechSynthesisUtterance(text);
                 u.lang = 'es-ES'; 
@@ -109,10 +108,14 @@ html
                     isSpeaking = false;
                     document.getElementById('statusText').textContent = 'Toca el micrófono para hablar';
                 };
+                u.onerror = () => {
+                    isSpeaking = false;
+                    document.getElementById('statusText').textContent = 'Error de audio. Toca "Probar sonido".';
+                };
+                
                 window.speechSynthesis.speak(u);
-                // Segundo truco: forzar la reproducción si Safari la ha pausado
-                window.speechSynthesis.resume();
-            }, 100);
+                window.speechSynthesis.resume(); // Forzar reproducción
+            }, 600);
         }
         
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -171,6 +174,8 @@ html
         document.getElementById('repeatBtn').addEventListener('click', () => {
             if (lastSpokenText) {
                 speak(lastSpokenText);
+            } else {
+                speak('Hola, soy tu asistente. Si escuchas esta voz, el audio funciona correctamente.');
             }
         });
         
@@ -193,4 +198,3 @@ html
     </script>
 </body>
 </html>
-
