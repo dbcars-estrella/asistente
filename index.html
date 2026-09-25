@@ -43,7 +43,7 @@
 <body>
     <div class="header">Lucía · 25 años</div>
     <div class="chat-container" id="chatContainer">
-        <div class="message bot-message">¡Hey! Soy Lucía. Tengo 25 años y me apetece charlar un rato. ¿Qué tal va tu día?</div>
+        <div class="message bot-message">¡Hey! Soy Lucía. 25 años, de Madrid. ¿Qué tal va tu día? Cuéntame algo, lo que sea.</div>
     </div>
     
     <div class="controls">
@@ -59,30 +59,167 @@
     </div>
 
     <script>
+        // ============================================================
+        // MOTOR CONVERSACIONAL AVANZADO - LUCÍA (25 años)
+        // ============================================================
+
         const MEMORY_KEYS = ['user_name', 'user_age', 'user_city', 'custom_knowledge'];
         let waitingForUserName = false;
+        let lastTopic = null;
+        let lastMood = null;
+        let conversationCount = 0;
 
+        // ---- UTILIDADES ----
         function setMemory(key, val) { localStorage.setItem('vc_mem_' + key, JSON.stringify(val)); }
         function getMemory(key) { const v = localStorage.getItem('vc_mem_' + key); return v ? JSON.parse(v) : null; }
-        
-        function normalizeText(s) { if(!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
+        function normalize(s) { if(!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+        function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
+        // ---- DICCIONARIOS DE TEMAS ----
+        const TEMAS = {
+            trabajo: ['trabajo','curro','currar','jefe','jefa','oficina','empresa','reunion','proyecto','cliente','empleo','contrato','sueldo','nomina','turno'],
+            tecnologia: ['inteligencia artificial','ia','programar','codigo','app','aplicacion','ordenador','movil','software','hardware','internet','web','algoritmo','datos','tecnologia','chatgpt','gemini'],
+            estudios: ['estudiar','estudio','carrera','universidad','grado','master','curso','examen','clase','profesor','apuntes','tesis'],
+            sentimientos_mal: ['triste','cansado','cansada','agotado','agotada','frustrado','frustrada','estresado','estresada','mal','fatal','hundido','hundida','preocupado','preocupada','ansioso','ansiosa','deprimido','deprimida'],
+            sentimientos_bien: ['feliz','contento','contenta','genial','alegre','bien','estupendo','maravilloso','animado','animada','ilusionado','ilusionada'],
+            amor: ['novio','novia','pareja','amor','enamorado','enamorada','cita','ligar','corazon','quiero','te quiero','beso','romantico'],
+            amistad: ['amigo','amiga','amigos','amigas','colegas','gente','quedar','plan','fiesta','salir'],
+            musica: ['musica','cancion','grupo','concierto','spotify','escuchar','cantante','album','rock','pop','indie','reggaeton'],
+            cine: ['pelicula','peli','serie','netflix','hbo','cine','ver','capitulo','temporada','documental'],
+            comida: ['comida','comer','cena','almuerzo','desayuno','pizza','pasta','sushi','cocinar','restaurante','cafe','cerveza','vino'],
+            deporte: ['deporte','gym','gimnasio','correr','caminar','bici','yoga','pilates','entrenar','ejercicio'],
+            viajes: ['viaje','viajar','vacaciones','destino','playa','montaña','hotel','vuelo','avion','pais','ciudad'],
+            dinero: ['dinero','pasta','crisis','paro','alquiler','hipoteca','precio','caro','economia','pagar','deuda'],
+            futuro: ['futuro','mañana','proximo','planear','sueño','meta','objetivo','quiero ser','algun dia'],
+            familia: ['familia','madre','padre','hermano','hermana','abuelo','abuela','primo','prima','hijo','hija'],
+            salud: ['salud','medico','enfermo','enferma','dolor','cabeza','gripe','pastilla','hospital'],
+            clima: ['tiempo','clima','llueve','llover','sol','frio','calor','nieve','nublado'],
+            humor: ['chiste','risa','reir','gracioso','broma','jaja','divertido']
+        };
+
+        // ---- GENERADORES DE RESPUESTA POR TEMA ----
+        const RESPUESTAS = {
+            trabajo: [
+                'Uf, el trabajo... a veces es un poco caos, ¿no? Yo estoy en marketing digital y hay días de locos. ¿Y tú en qué andas?',
+                'Suena a que tienes lío con el curro. Cuéntame más, ¿es algo puntual o siempre es así?',
+                'El trabajo nos come a veces. Yo intento desconectar cuando salgo, aunque no siempre lo consigo.'
+            ],
+            tecnologia: [
+                'Ostras, qué interesante. La inteligencia artificial está cambiando todo, ¿no? Yo la uso un poco en el trabajo pero me pierdo con la parte técnica.',
+                'Me flipa que sepas de eso. Yo soy más de letras, la verdad. ¿Y llevas mucho tiempo con el proyecto?',
+                'La verdad es que la tecnología avanza rapidísimo. Yo me quedo alucinada con lo que se puede hacer ahora.'
+            ],
+            estudios: [
+                'Ay, estudiar... yo ya lo dejé pero a veces pienso en hacer algún curso. ¿Y tú qué estás estudiando?',
+                'Qué bien que sigas estudiando, con lo que cuesta ponerse. ¿Se te da bien o hay alguna asignatura que se te atraganta?'
+            ],
+            sentimientos_mal: [
+                'Vaya, lo siento de verdad. ¿Quieres contarme qué te pasa? A veces hablarlo, aunque sea con alguien que no conoces, ayuda.',
+                'Uf, te entiendo. Hay días que todo pesa más. Yo lo que hago es ponerme música y salir a andar un rato. ¿Tú qué sueles hacer?',
+                'Lo siento mucho. Si te sirve de algo, aquí estoy para escucharte. ¿Qué ha pasado?'
+            ],
+            sentimientos_bien: [
+                '¡Qué bien! Me alegro un montón. ¿Y qué ha pasado, si se puede saber?',
+                '¡Genial! Se nota que estás contento. Cuéntame, cuéntame.',
+                '¡Me encanta oír eso! A ver, dime qué te tiene así de contento.'
+            ],
+            amor: [
+                'Ay, el amor... tema complicado. Yo ahora mismo estoy soltera y tampoco me agobia, la verdad. ¿Y tú qué tal?',
+                'Uf, eso es un mundo. ¿Y cómo va la cosa, bien o complicado?',
+                'Qué bonito. Yo estoy en un momento de centrarme en mí, pero me alegro por ti.'
+            ],
+            amistad: [
+                'Los amigos son lo mejor, la verdad. Yo tengo un grupo de toda la vida y luego los del trabajo. ¿Y tú?',
+                'Qué bien. Yo creo que a esta edad cuesta más quedar con todos, cada uno va a su ritmo.'
+            ],
+            musica: [
+                '¡Uy, la música es mi salvación! Yo escucho mucho indie y algo de pop. Depende del día. ¿Tú qué escuchas?',
+                'Me encanta la música, la verdad. Pásame alguna recomendación si quieres, que siempre me gusta descubrir cosas nuevas.'
+            ],
+            cine: [
+                'Uf, estoy enganchada a una serie de misterio. Y para pelis me tira mucho el cine independiente. ¿Tienes alguna recomendación?',
+                'A mí me gusta mucho el cine, aunque reconozco que últimamente veo más series. Es más cómodo.'
+            ],
+            comida: [
+                '¡Ay, la comida! A mí me pierde la pasta, te lo digo en serio. Y el sushi tampoco lo rechazo.',
+                'Yo cocino regular, pero me gusta. Aunque cuando salgo a cenar me lo disfruto más.'
+            ],
+            deporte: [
+                'Yo voy al gimnasio tres veces por semana, aunque a veces me da una pereza... Pero luego se agradece.',
+                'Uf, el deporte. A mí me cuesta ponerme pero cuando lo hago me siento genial.'
+            ],
+            viajes: [
+                'Me encantaría viajar más. Tengo pendiente Japón y algún país del norte de Europa. ¿Tú has viajado mucho?',
+                'Ay, viajar es lo mejor. Yo el año pasado estuve de escapada y me quedé con ganas de más.'
+            ],
+            dinero: [
+                'Ya... está todo complicado, la verdad. Nos toca aguantar y apañarnos como podemos.',
+                'Uf, no me hables del dinero. El alquiler está imposible, sobre todo en las ciudades.'
+            ],
+            futuro: [
+                'Me gusta pensar en el futuro, aunque a veces me agobia un poco. ¿Tú tienes claro lo que quieres?',
+                'Yo tengo algunas metas pero voy despacio, sin prisa. ¿Y tú qué planes tienes?'
+            ],
+            familia: [
+                'La familia es la familia... A veces un lío, pero ahí están. ¿Tú te llevas bien con los tuyos?',
+                'Yo con mis padres me llevo bien, aunque a veces no me entiendan del todo. Cosas de la edad.'
+            ],
+            salud: [
+                'Uf, cuídate. Yo intento hacer vida sana aunque a veces me salto la dieta. ¿Estás mejor?',
+                'Ponte bien, ¿eh? La salud es lo primero.'
+            ],
+            clima: [
+                'Ay, el tiempo está loco. Yo ya no sé ni qué ropa ponerme.',
+                'Pues aquí hace un día raro, la verdad. ¿Y por tu zona qué tal?'
+            ],
+            humor: [
+                '¡Jajaja! Qué bueno. Me encanta que tengas ese rollo.',
+                '¡Jajaja! Ay, me has sacado una sonrisa.'
+            ]
+        };
+
+        // ---- FUNCIÓN PRINCIPAL DE ANÁLISIS ----
+        function analizarMensaje(raw) {
+            const proc = normalize(raw);
+            const palabras = proc.split(/\s+/);
+            const temasDetectados = [];
+            
+            // Detectar temas por palabras clave
+            for (let tema in TEMAS) {
+                for (let palabra of TEMAS[tema]) {
+                    if (proc.includes(normalize(palabra))) {
+                        if (!temasDetectados.includes(tema)) temasDetectados.push(tema);
+                        break;
+                    }
+                }
+            }
+
+            // Detectar si es un mensaje largo (más de 8 palabras)
+            const esLargo = palabras.length > 8;
+            
+            // Detectar nombre del usuario en el mensaje
+            const nameMatch = raw.match(/(?:mi nombre es|me llamo|soy)\s+([a-zA-Záéíóúñü\s]{2,30})/i);
+
+            return { proc, palabras, temasDetectados, esLargo, nameMatch };
+        }
+
+        // ---- FUNCIÓN DE APRENDIZAJE ----
         function extractTeaching(raw) {
             let m1 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(.+?)\s+(?:es|son|significa|se llama)\s+(.+)/i);
-            if (m1 && m1[1] && m1[2]) return { question: normalizeText(m1[1]), answer: m1[2].trim() };
-            
+            if (m1 && m1[1] && m1[2]) return { question: normalize(m1[1]), answer: m1[2].trim() };
             let m2 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(?:si te digo|cuando te diga|cuando diga)\s+(.+?)\s*[,.]?\s*(?:respondas|me digas|dime|contesta)\s+(.+)/i);
             if (m2 && m2[1] && m2[2]) {
-                let cleanQ = m2[1].replace(/["'«»]/g, '').trim();
-                let cleanA = m2[2].replace(/["'«»]/g, '').trim();
-                return { question: normalizeText(cleanQ), answer: cleanA };
+                return { question: normalize(m2[1].replace(/["'«»]/g, '').trim()), answer: m2[2].replace(/["'«»]/g, '').trim() };
             }
             return null;
         }
-        
+
+        // ---- GENERADOR DE RESPUESTA ----
         function generateResponse(raw) {
-            const proc = normalizeText(raw);
+            const analisis = analizarMensaje(raw);
+            const { proc, palabras, temasDetectados, esLargo, nameMatch } = analisis;
+            conversationCount++;
 
             // 1. APRENDIZAJE
             const teaching = extractTeaching(raw);
@@ -90,7 +227,7 @@
                 let customKnowledge = getMemory('custom_knowledge') || {};
                 customKnowledge[teaching.question] = teaching.answer;
                 setMemory('custom_knowledge', customKnowledge);
-                return 'Vale, lo apunto: ' + teaching.question + ' es ' + teaching.answer + '. Me lo guardo.';
+                return 'Vale, me lo apunto: ' + teaching.question + ' es ' + teaching.answer + '. Lo recordaré.';
             }
 
             // 2. BUSCAR EN LO APRENDIDO
@@ -100,12 +237,18 @@
             }
 
             // 3. NOMBRES
+            if (nameMatch && nameMatch[1]) {
+                const nombre = capitalize(nameMatch[1].trim().split(' ')[0]);
+                setMemory('user_name', nombre);
+                return '¡Encantada, ' + nombre + '! ¿Y a qué te dedicas, si se puede saber?';
+            }
+
             if (waitingForUserName) {
                 let possibleName = raw.trim();
-                if (possibleName.length > 1 && possibleName.length < 30 && !possibleName.includes(' ') && !possibleName.toLowerCase().includes('aprende')) {
+                if (possibleName.length > 1 && possibleName.length < 30 && !possibleName.includes(' ')) {
                     setMemory('user_name', capitalize(possibleName));
                     waitingForUserName = false;
-                    return '¡Encantada, ' + capitalize(possibleName) + '! ¿Y a qué te dedicas?';
+                    return '¡Encantada, ' + capitalize(possibleName) + '! ¿Qué tal, cuéntame algo de ti?';
                 }
                 waitingForUserName = false;
             }
@@ -117,111 +260,119 @@
                 return 'Pues no me lo has dicho todavía. ¿Cómo te llamas?';
             }
             if (proc.match(/(como te llamas|tu nombre|tienes nombre)/)) {
-                return 'Me llamo Lucía. 25 años, de Madrid. Encantada.';
+                return 'Me llamo Lucía, tengo 25 años. Encantada.';
             }
 
-            const nameMatch = raw.match(/(?:mi nombre es|me llamo|soy)\s+([a-zA-Záéíóúñü\s]{2,30})/i);
-            if (nameMatch && nameMatch[1]) {
-                const name = capitalize(nameMatch[1].trim().split(' ')[0]);
-                setMemory('user_name', name);
-                return '¡Encantada, ' + name + '! ¿Qué tal, cuéntame?';
-            }
-
-            // 4. ROL: MUJER ADULTA DE 25 AÑOS
             const userName = getMemory('user_name');
             const userCall = userName ? userName : 'tío';
 
-            // Saludos
-            if (proc.match(/(hola|buenas|saludos|buenos días|buenas tardes|buenas noches)/)) {
-                return '¡Hola ' + userCall + '! ¿Qué tal va todo? Cuéntame.';
-            }
-            if (proc.match(/(qué tal|cómo estás|como estas)/)) {
-                return 'Bien, la verdad. Un poco cansada de la semana, pero bien. ¿Y tú qué tal?';
-            }
-            if (proc.match(/(qué haces|que haces)/)) {
-                return 'Aquí, en casa con un café, aprovechando que no tengo nada urgente. ¿Tú qué haces?';
-            }
-
-            // Trabajo / estudios / vida adulta
-            if (proc.match(/(a qué te dedicas|en qué trabajas|trabajas|tu trabajo)/)) {
-                return 'Trabajo en marketing digital, en una agencia pequeña. Hay días que es un caos, pero me gusta bastante. ¿Y tú a qué te dedicas?';
-            }
-            if (proc.match(/(estudias|estudiaste|carrera|universidad)/)) {
-                return 'Estudié Publicidad y Relaciones Públicas. Ahora estoy pensando en hacer un curso de algo más creativo, la verdad.';
-            }
-            if (proc.match(/(vives sola|con quien vives|dónde vives)/)) {
-                return 'Vivo en un piso compartido con una amiga. Alquiler está imposible, ya sabes cómo está el tema.';
+            // 4. SALUDOS INICIALES (solo si es un saludo corto)
+            if (palabras.length <= 4 && proc.match(/(hola|buenas|saludos|buenos dias|buenas tardes|buenas noches)/)) {
+                lastTopic = 'saludo';
+                const saludos = [
+                    '¡Hola ' + userCall + '! ¿Qué tal va todo? Cuéntame.',
+                    '¡Hey! ¿Cómo va ese día? Cuéntame algo.',
+                    '¡Hola! ¿Qué te cuentas? Hacía rato que no hablábamos.'
+                ];
+                return pickRandom(saludos);
             }
 
-            // Gustos
-            if (proc.match(/(música|musica|qué escuchas|grupo favorito)/)) {
-                return 'Últimamente escucho mucho indie y algo de pop. Depende del día. ¿Tú qué música escuchas?';
+            // 5. PREGUNTAS DIRECTAS SOBRE LUCÍA
+            if (proc.match(/(a que te dedicas|en que trabajas|trabajas)/)) {
+                return 'Trabajo en marketing digital, en una agencia pequeña. Hay días de caos pero me gusta. ¿Y tú a qué te dedicas?';
             }
-            if (proc.match(/(película|pelicula|serie|netflix|qué ves)/)) {
-                return 'Estoy enganchada a una serie de misterio. Y para pelis me tira mucho el cine independiente. ¿Tienes alguna recomendación?';
+            if (proc.match(/(que edad tienes|cuantos anos tienes)/)) {
+                return 'Tengo 25 años. En nada los 26, que ya me va tocando.';
             }
-            if (proc.match(/(comida favorita|qué comes|te gusta comer)/)) {
-                return 'Me pierde la comida italiana. Una buena pasta y soy feliz. Aunque también te digo que un buen sushi no lo rechazo.';
+            if (proc.match(/(donde vives|de donde eres)/)) {
+                return 'Soy de Madrid, y vivo aquí en un piso compartido con una amiga. El alquiler está imposible, ya sabes.';
             }
-            if (proc.match(/(deporte|gym|gimnasio|haces ejercicio)/)) {
-                return 'Voy al gimnasio tres veces por semana, aunque a veces me da una pereza... Pero luego se agradece.';
+            if (proc.match(/(estudiaste|que estudiaste|carrera)/)) {
+                return 'Estudié Publicidad y Relaciones Públicas. Ahora estoy pensando en hacer algún curso más creativo.';
             }
-            if (proc.match(/(viajar|vacaciones|destino)/)) {
-                return 'Me encantaría viajar más. Tengo pendiente Japón y algún país del norte de Europa. ¿Tú has viajado mucho?';
+            if (proc.match(/(estas soltera|tienes novio|tienes pareja)/)) {
+                return 'Soltera ahora mismo. Y bueno, tampoco me agobia. Prefiero estar bien conmigo misma antes que con cualquiera.';
             }
-
-            // Relaciones / emociones
-            if (proc.match(/(novio|novia|pareja|estás soltera)/)) {
-                return 'Soltera ahora mismo. Y bueno, tampoco me agobia, la verdad. Prefiero estar bien conmigo misma.';
+            if (proc.match(/(que musica te gusta|que escuchas)/)) {
+                return 'Escucho mucho indie, algo de pop y depende del día. ¿Tú qué música escuchas?';
             }
-            if (proc.match(/(amigos|amigas)/)) {
-                return 'Tengo un grupo de amigas de toda la vida y luego amigos del trabajo. Quedamos cuando podemos, que cada una va a su ritmo.';
+            if (proc.match(/(que series ves|que peliculas te gustan)/)) {
+                return 'Estoy enganchada a una serie de misterio. Y para pelis me tira el cine independiente. ¿Alguna recomendación?';
             }
-            if (proc.match(/(triste|mal|fatal|deprimido)/)) {
-                return 'Vaya, lo siento. ¿Quieres contarme qué te pasa? A veces hablarlo ayuda, aunque sea con alguien que no conoces.';
-            }
-            if (proc.match(/(feliz|contento|contenta|alegre)/)) {
-                return '¡Me alegro mucho! ¿Y qué ha pasado, si se puede saber?';
-            }
-            if (proc.match(/(cansado|cansada|agotado)/)) {
-                return 'Uf, te entiendo. La semana se hace larga a veces. Yo lo que hago es desconectar con música y un buen café.';
-            }
-
-            // Temas actuales / cotidianos
-            if (proc.match(/(crisis|dinero|paro|precio|alquiler)/)) {
-                return 'Ya... está todo complicado, la verdad. Nos toca aguantar y apañarnos como podemos.';
-            }
-            if (proc.match(/(te gusta leer|libros)/)) {
-                return 'Sí, leo bastante antes de dormir. Ahora mismo estoy con una novela de esas que te enganchan y no puedes soltar.';
-            }
-            if (proc.match(/(te gustan los animales|tienes mascota)/)) {
+            if (proc.match(/(tienes mascota|te gustan los animales)/)) {
                 return 'Me encantaría tener un gato, pero como vivo de alquiler no me dejan. De momento me conformo con los de mis amigas.';
             }
-            if (proc.match(/(te gustan las chicas|te gustan los chicos|tipo de chico|tipo de chica)/)) {
-                return 'A mí me gusta la gente interesante, la verdad. Que tenga conversación y algo dentro. El físico ayuda, pero no lo es todo.';
+
+            // 6. RESPUESTA BASADA EN EL TEMA DETECTADO
+            if (temasDetectados.length > 0) {
+                // Priorizar sentimientos (son los más importantes)
+                const prioridad = ['sentimientos_mal','sentimientos_bien','trabajo','tecnologia','amor','dinero','salud','estudios','musica','cine','comida','deporte','viajes','amistad','familia','futuro','clima','humor'];
+                
+                for (let temaPrioritario of prioridad) {
+                    if (temasDetectados.includes(temaPrioritario) && RESPUESTAS[temaPrioritario]) {
+                        lastTopic = temaPrioritario;
+                        
+                        // Si el mensaje es largo, añadir una coletilla de seguimiento
+                        if (esLargo) {
+                            let respuesta = pickRandom(RESPUESTAS[temaPrioritario]);
+                            const coletillas = [
+                                ' Cuéntame más, que me has dejado con la intriga.',
+                                ' ¿Y cómo te hace sentir eso?',
+                                ' Me interesa mucho lo que me cuentas.',
+                                ' ¿Y qué piensas hacer?'
+                            ];
+                            return respuesta + pickRandom(coletillas);
+                        }
+                        return pickRandom(RESPUESTAS[temaPrioritario]);
+                    }
+                }
             }
 
-            // Hora
+            // 7. RESPUESTAS DE SEGUIMIENTO (si es largo pero no detectamos tema claro)
+            if (esLargo) {
+                lastTopic = 'general_largo';
+                const respuestasLargas = [
+                    'Vaya, veo que tienes mucho que contar. Me gusta escucharte, de verdad. ¿Y tú cómo llevas todo eso?',
+                    'Entiendo lo que me dices. A veces las cosas se complican, ¿no? ¿Y qué es lo que más te preocupa ahora mismo?',
+                    'Me parece muy interesante lo que cuentas. Yo creo que hay que ir paso a paso, sin agobiarse. ¿Tú qué opinas?',
+                    'Ostras, pues suena a que tienes un lío importante. Si quieres desahogarte, aquí estoy. ¿Qué es lo que más te ronda la cabeza?'
+                ];
+                return pickRandom(respuestasLargas);
+            }
+
+            // 8. RESPUESTAS CORTAS GENÉRICAS
+            if (palabras.length <= 3) {
+                const cortas = [
+                    'Cuéntame más, que me dejas con la intriga.',
+                    '¿Y eso? A ver, explícame un poco más.',
+                    'Mmm, interesante. Sigue, sigue.',
+                    '¿En serio? Y qué más.'
+                ];
+                return pickRandom(cortas);
+            }
+
+            // 9. HORA
             if (proc.includes('hora')) {
                 const d = new Date();
                 return 'Son las ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0') + '. ¿Tienes prisa o seguimos charlando?';
             }
 
-            // Cariño / conversación afectiva
-            if (proc.match(/(te quiero|te adoro)/)) {
+            // 10. CARIÑO
+            if (proc.match(/(te quiero|te adoro|me gustas)/)) {
                 return '¡Ay, qué bonito! Yo también te tengo cariño, ' + userCall + '. Eres un encanto.';
             }
 
-            // 5. FALLBACK
+            // 11. FALLBACK INTELIGENTE (repite parte de lo que dijo el usuario)
             const fallbacks = [
-                'Hmm, no termino de pillarte. ¿Me lo explicas con otras palabras?',
+                'A ver si te entiendo... ¿me lo explicas con otras palabras?',
                 'Pues no sé muy bien qué decirte a eso. ¿Cambiamos de tema o me cuentas más?',
-                'No entiendo eso, pero me interesa. ¿A qué te refieres exactamente?',
+                'No te pillo del todo, la verdad. ¿A qué te refieres exactamente?',
                 'Uf, eso me pilla un poco fuera de juego. ¿Y tú qué opinas?'
             ];
-            return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+            return pickRandom(fallbacks);
         }
         
+        // ---- VOZ ----
         let voices = [];
         function loadVoices() { voices = window.speechSynthesis.getVoices(); }
         if (window.speechSynthesis) { window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }
@@ -258,6 +409,7 @@
             }, 600);
         }
         
+        // ---- RECONOCIMIENTO DE VOZ ----
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let recognition = null;
         let isListening = false;
@@ -298,6 +450,7 @@
             else speak('Hola, soy Lucía. ¿Qué tal?');
         });
         
+        // ---- UI ----
         const chatContainer = document.getElementById('chatContainer');
         const inputText = document.getElementById('inputText');
         
