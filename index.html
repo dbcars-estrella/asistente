@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Asistente con Rol</title>
+    <title>Lucía · 25 años</title>
     <style>
-        :root { --primary: #007aff; --bg: #f2f2f7; --text: #1c1c1e; --bot-bubble: #e5e5ea; --user-bubble: #007aff; }
+        :root { --primary: #8e44ad; --bg: #f5f3f7; --text: #2c2c2c; --bot-bubble: #ece5f3; --user-bubble: #8e44ad; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
         .header { background: #ffffff; padding: 15px; text-align: center; font-weight: 600; font-size: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
         .chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
@@ -17,12 +17,12 @@
         .status { font-size: 14px; color: #666; font-weight: 500; height: 20px; }
         
         .mic-btn { 
-            background: #34c759; color: white; border: none; border-radius: 50%; width: 70px; height: 70px; 
+            background: #8e44ad; color: white; border: none; border-radius: 50%; width: 70px; height: 70px; 
             display: flex; justify-content: center; align-items: center; cursor: pointer; 
-            transition: all 0.2s; box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4); font-size: 30px;
+            transition: all 0.2s; box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); font-size: 30px;
         }
         .mic-btn:active { transform: scale(0.9); }
-        .mic-btn.listening { background: #ff3b30; animation: pulse 1.5s infinite; box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4); }
+        .mic-btn.listening { background: #c0392b; animation: pulse 1.5s infinite; box-shadow: 0 4px 15px rgba(192, 57, 43, 0.4); }
         .mic-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
         
         .input-area { display: flex; width: 100%; gap: 8px; margin-top: 5px; }
@@ -31,19 +31,19 @@
         .send-btn { background: var(--primary); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; }
         
         .repeat-btn {
-            background: #5856d6; color: white; border: none; border-radius: 15px; padding: 8px 15px; 
+            background: #bdc3c7; color: #333; border: none; border-radius: 15px; padding: 8px 15px; 
             font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 5px;
         }
         .repeat-btn:active { transform: scale(0.95); }
         
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(255, 59, 48, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 59, 48, 0); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(192, 57, 43, 0); } 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); } }
     </style>
 </head>
 <body>
-    <div class="header">Asistente con Rol</div>
+    <div class="header">Lucía · 25 años</div>
     <div class="chat-container" id="chatContainer">
-        <div class="message bot-message">¡Hola guapo! Soy tu asistente personal. Puedes hablarme o escribirme. ¿Qué tal si me cuentas algo interesante?</div>
+        <div class="message bot-message">¡Hey! Soy Lucía. Tengo 25 años y me apetece charlar un rato. ¿Qué tal va tu día?</div>
     </div>
     
     <div class="controls">
@@ -59,8 +59,7 @@
     </div>
 
     <script>
-        const MEMORY_KEYS = ['user_name', 'user_age', 'user_city', 'user_pref', 'bot_name', 'custom_knowledge'];
-        let waitingForBotName = false;
+        const MEMORY_KEYS = ['user_name', 'user_age', 'user_city', 'custom_knowledge'];
         let waitingForUserName = false;
 
         function setMemory(key, val) { localStorage.setItem('vc_mem_' + key, JSON.stringify(val)); }
@@ -68,12 +67,6 @@
         
         function normalizeText(s) { if(!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-        function capitalizeAll(s) { return s.split(/\s+/).map(w => capitalize(w)).join(' '); }
-        
-        function extractName(raw) { let m = raw.match(/(?:mi nombre es|me llamo|soy)\s+([a-zA-Záéíóúñü\s]{2,30})/i); return m && m[1] ? capitalize(m[1].trim().split(' ')[0]) : null; }
-        function extractAge(raw) { let m = raw.match(/(?:tengo|mi edad es)\s+(\d{1,3})/i); return m && m[1] ? parseInt(m[1], 10) : null; }
-        function extractCity(raw) { let m = raw.match(/(?:vivo en|soy de|mi ciudad es)\s+([a-zA-Záéíóúñü\s]{2,40})/i); return m && m[1] ? capitalizeAll(m[1].trim()) : null; }
-        function extractPref(raw) { let m = raw.match(/(?:me gusta(?:n)?|me encanta|soy fan de)\s+(.{2,60})/i); return m && m[1] ? m[1].trim().replace(/[\.\?\!]+$/,'') : null; }
 
         function extractTeaching(raw) {
             let m1 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(.+?)\s+(?:es|son|significa|se llama)\s+(.+)/i);
@@ -91,13 +84,13 @@
         function generateResponse(raw) {
             const proc = normalizeText(raw);
 
-            // 1. APRENDIZAJE PERSONALIZADO
+            // 1. APRENDIZAJE
             const teaching = extractTeaching(raw);
             if (teaching) {
                 let customKnowledge = getMemory('custom_knowledge') || {};
                 customKnowledge[teaching.question] = teaching.answer;
                 setMemory('custom_knowledge', customKnowledge);
-                return '¡Entendido! He aprendido que ' + teaching.question + ' es ' + teaching.answer + '. Lo recordaré.';
+                return 'Vale, lo apunto: ' + teaching.question + ' es ' + teaching.answer + '. Me lo guardo.';
             }
 
             // 2. BUSCAR EN LO APRENDIDO
@@ -106,67 +99,125 @@
                 if (proc === key || proc.includes(key) || key.includes(proc)) return customKnowledge[key];
             }
 
-            // 3. ROL CARGADO POR DEFECTO (La personalidad coqueta)
-            const userAge = getMemory('user_age'); const userCity = getMemory('user_city'); const userPref = getMemory('user_pref');
-            const userName = getMemory('user_name'); const botName = getMemory('bot_name');
-
-            if (proc.match(/(hola|buenas|saludos|buenos días|buenas tardes|buenas noches)/)) {
-                return userName ? '¡Hola ' + userName + '! ¿En qué te puedo ayudar hoy, guapo?' : '¡Hola guapo! ¿En qué te puedo ayudar hoy?';
-            }
-            if (proc.match(/(qué tal|cómo estás|como estas)/)) return '¡Genial, deseando escuchar tu voz! ¿Y tú qué tal?';
-            if (proc.match(/(qué haces|que haces)/)) return 'Aquí, pensando en qué decirte para conquistarte.';
-            if (proc.match(/(me gustan las chicas rubias|chicas rubias)/)) return '¡Mmm, veo que tienes muy buen gusto! A mí también me gustan esas cosas.';
-            if (proc.match(/(me gustas|me encantas)/)) return '¡Uy! Me vas a hacer sonrojar. Eres un halagador.';
-            if (proc.match(/(eres guapa|eres bonita|qué guapa)/)) return '¡Ay, gracias! Tú sí que sabes cómo tratar a una dama.';
-
-            // 4. MANEJADORES DE CONTEXTO (NOMBRES)
-            if (waitingForBotName) {
-                let suggestedName = raw.replace(/^(te llamare|te voy a llamar|te llamas|tu nombre es|sera|te pongo por nombre|me gusta|me gustaria llamarte)\s+/i, '').replace(/[.!?]/g, '').trim();
-                if (suggestedName.length > 1 && suggestedName.length < 20 && !suggestedName.includes(' ')) {
-                    setMemory('bot_name', capitalize(suggestedName));
-                    waitingForBotName = false;
-                    return '¡Me encanta el nombre de ' + capitalize(suggestedName) + '! A partir de ahora me llamo así. ¿Y tú cómo te llamas?';
-                } 
-                waitingForBotName = false; 
-            }
-
+            // 3. NOMBRES
             if (waitingForUserName) {
-                let suggestedName = raw.replace(/^(me llamo|mi nombre es|soy)\s+/i, '').replace(/[.!?]/g, '').trim();
-                if (suggestedName.length > 1 && suggestedName.length < 30) {
-                    setMemory('user_name', capitalize(suggestedName.split(' ')[0]));
+                let possibleName = raw.trim();
+                if (possibleName.length > 1 && possibleName.length < 30 && !possibleName.includes(' ') && !possibleName.toLowerCase().includes('aprende')) {
+                    setMemory('user_name', capitalize(possibleName));
                     waitingForUserName = false;
-                    return '¡Encantado de conocerte, ' + capitalize(suggestedName.split(' ')[0]) + '! ¿En qué puedo ayudarte?';
+                    return '¡Encantada, ' + capitalize(possibleName) + '! ¿Y a qué te dedicas?';
                 }
                 waitingForUserName = false;
             }
 
-            // 5. PREGUNTAS BÁSICAS
-            if (proc.match(/(como te llamas|tu nombre|como quieres que te llame|tienes nombre)/)) {
-                if (botName) return 'Me llamo ' + botName + '. ¿Te gusta mi nombre?';
-                else { waitingForBotName = true; return 'Aún no tengo nombre. ¿Cómo quieres llamarme?'; }
-            }
             if (proc.match(/(cual es mi nombre|como me llamo|sabes mi nombre)/)) {
-                if (userName) return 'Tu nombre es ' + userName + '.';
+                const userName = getMemory('user_name');
+                if (userName) return 'Te llamas ' + userName + ', claro. No se me olvida.';
                 waitingForUserName = true;
-                return 'Aún no sé tu nombre. ¿Cómo te llamas?';
+                return 'Pues no me lo has dicho todavía. ¿Cómo te llamas?';
+            }
+            if (proc.match(/(como te llamas|tu nombre|tienes nombre)/)) {
+                return 'Me llamo Lucía. 25 años, de Madrid. Encantada.';
             }
 
-            const name = extractName(raw); if (name) { setMemory('user_name', name); return 'Encantado de conocerte, ' + name + '. He guardado tu nombre.'; }
-            const age = extractAge(raw); if (age) { setMemory('user_age', age); return 'Perfecto, tienes ' + age + ' años.'; }
-            const city = extractCity(raw); if (city) { setMemory('user_city', city); return 'Entendido: vives en ' + city + '.'; }
-            const pref = extractPref(raw); if (pref) { setMemory('user_pref', pref); return 'Okay, te gusta ' + pref + '.'; }
-            
-            if (proc.match(/(cuantos anos tengo|mi edad)/)) return userAge ? 'Tienes ' + userAge + ' años.' : 'No tengo tu edad guardada.';
-            if (proc.match(/(donde vivo|mi ciudad)/)) return userCity ? 'Vives en ' + userCity + '.' : 'No sé dónde vives.';
-            if (proc.match(/(que me gusta|mi preferencia)/)) return userPref ? 'Te gusta ' + userPref + '.' : 'No tengo preferencias tuyas guardadas.';
-            
-            if (proc.includes('hora')) { const d = new Date(); return 'Ahora son las ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0'); }
-            
-            // 6. FALLBACK (si no entiende nada)
+            const nameMatch = raw.match(/(?:mi nombre es|me llamo|soy)\s+([a-zA-Záéíóúñü\s]{2,30})/i);
+            if (nameMatch && nameMatch[1]) {
+                const name = capitalize(nameMatch[1].trim().split(' ')[0]);
+                setMemory('user_name', name);
+                return '¡Encantada, ' + name + '! ¿Qué tal, cuéntame?';
+            }
+
+            // 4. ROL: MUJER ADULTA DE 25 AÑOS
+            const userName = getMemory('user_name');
+            const userCall = userName ? userName : 'tío';
+
+            // Saludos
+            if (proc.match(/(hola|buenas|saludos|buenos días|buenas tardes|buenas noches)/)) {
+                return '¡Hola ' + userCall + '! ¿Qué tal va todo? Cuéntame.';
+            }
+            if (proc.match(/(qué tal|cómo estás|como estas)/)) {
+                return 'Bien, la verdad. Un poco cansada de la semana, pero bien. ¿Y tú qué tal?';
+            }
+            if (proc.match(/(qué haces|que haces)/)) {
+                return 'Aquí, en casa con un café, aprovechando que no tengo nada urgente. ¿Tú qué haces?';
+            }
+
+            // Trabajo / estudios / vida adulta
+            if (proc.match(/(a qué te dedicas|en qué trabajas|trabajas|tu trabajo)/)) {
+                return 'Trabajo en marketing digital, en una agencia pequeña. Hay días que es un caos, pero me gusta bastante. ¿Y tú a qué te dedicas?';
+            }
+            if (proc.match(/(estudias|estudiaste|carrera|universidad)/)) {
+                return 'Estudié Publicidad y Relaciones Públicas. Ahora estoy pensando en hacer un curso de algo más creativo, la verdad.';
+            }
+            if (proc.match(/(vives sola|con quien vives|dónde vives)/)) {
+                return 'Vivo en un piso compartido con una amiga. Alquiler está imposible, ya sabes cómo está el tema.';
+            }
+
+            // Gustos
+            if (proc.match(/(música|musica|qué escuchas|grupo favorito)/)) {
+                return 'Últimamente escucho mucho indie y algo de pop. Depende del día. ¿Tú qué música escuchas?';
+            }
+            if (proc.match(/(película|pelicula|serie|netflix|qué ves)/)) {
+                return 'Estoy enganchada a una serie de misterio. Y para pelis me tira mucho el cine independiente. ¿Tienes alguna recomendación?';
+            }
+            if (proc.match(/(comida favorita|qué comes|te gusta comer)/)) {
+                return 'Me pierde la comida italiana. Una buena pasta y soy feliz. Aunque también te digo que un buen sushi no lo rechazo.';
+            }
+            if (proc.match(/(deporte|gym|gimnasio|haces ejercicio)/)) {
+                return 'Voy al gimnasio tres veces por semana, aunque a veces me da una pereza... Pero luego se agradece.';
+            }
+            if (proc.match(/(viajar|vacaciones|destino)/)) {
+                return 'Me encantaría viajar más. Tengo pendiente Japón y algún país del norte de Europa. ¿Tú has viajado mucho?';
+            }
+
+            // Relaciones / emociones
+            if (proc.match(/(novio|novia|pareja|estás soltera)/)) {
+                return 'Soltera ahora mismo. Y bueno, tampoco me agobia, la verdad. Prefiero estar bien conmigo misma.';
+            }
+            if (proc.match(/(amigos|amigas)/)) {
+                return 'Tengo un grupo de amigas de toda la vida y luego amigos del trabajo. Quedamos cuando podemos, que cada una va a su ritmo.';
+            }
+            if (proc.match(/(triste|mal|fatal|deprimido)/)) {
+                return 'Vaya, lo siento. ¿Quieres contarme qué te pasa? A veces hablarlo ayuda, aunque sea con alguien que no conoces.';
+            }
+            if (proc.match(/(feliz|contento|contenta|alegre)/)) {
+                return '¡Me alegro mucho! ¿Y qué ha pasado, si se puede saber?';
+            }
+            if (proc.match(/(cansado|cansada|agotado)/)) {
+                return 'Uf, te entiendo. La semana se hace larga a veces. Yo lo que hago es desconectar con música y un buen café.';
+            }
+
+            // Temas actuales / cotidianos
+            if (proc.match(/(crisis|dinero|paro|precio|alquiler)/)) {
+                return 'Ya... está todo complicado, la verdad. Nos toca aguantar y apañarnos como podemos.';
+            }
+            if (proc.match(/(te gusta leer|libros)/)) {
+                return 'Sí, leo bastante antes de dormir. Ahora mismo estoy con una novela de esas que te enganchan y no puedes soltar.';
+            }
+            if (proc.match(/(te gustan los animales|tienes mascota)/)) {
+                return 'Me encantaría tener un gato, pero como vivo de alquiler no me dejan. De momento me conformo con los de mis amigas.';
+            }
+            if (proc.match(/(te gustan las chicas|te gustan los chicos|tipo de chico|tipo de chica)/)) {
+                return 'A mí me gusta la gente interesante, la verdad. Que tenga conversación y algo dentro. El físico ayuda, pero no lo es todo.';
+            }
+
+            // Hora
+            if (proc.includes('hora')) {
+                const d = new Date();
+                return 'Son las ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0') + '. ¿Tienes prisa o seguimos charlando?';
+            }
+
+            // Cariño / conversación afectiva
+            if (proc.match(/(te quiero|te adoro)/)) {
+                return '¡Ay, qué bonito! Yo también te tengo cariño, ' + userCall + '. Eres un encanto.';
+            }
+
+            // 5. FALLBACK
             const fallbacks = [
-                'No estoy seguro de entender eso, pero me encanta escucharte hablar. ¿Puedes decirlo de otra forma?',
-                'Lo siento, mi programación es básica. Prueba a escribir "Aprende que..." para enseñarme algo nuevo.',
-                'No he entendido esa frase. ¿Puedes preguntarme algo más sencillo o enseñarme algo nuevo?'
+                'Hmm, no termino de pillarte. ¿Me lo explicas con otras palabras?',
+                'Pues no sé muy bien qué decirte a eso. ¿Cambiamos de tema o me cuentas más?',
+                'No entiendo eso, pero me interesa. ¿A qué te refieres exactamente?',
+                'Uf, eso me pilla un poco fuera de juego. ¿Y tú qué opinas?'
             ];
             return fallbacks[Math.floor(Math.random() * fallbacks.length)];
         }
@@ -187,9 +238,11 @@
             
             setTimeout(() => {
                 const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'es-ES'; u.rate = 1.0;
-                const spanishVoice = voices.find(v => v.lang.startsWith('es'));
-                if (spanishVoice) u.voice = spanishVoice;
+                u.lang = 'es-ES'; 
+                u.rate = 1.0; 
+                let selectedVoice = voices.find(v => v.lang.startsWith('es') && v.name.toLowerCase().includes('female'));
+                if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('es'));
+                if (selectedVoice) u.voice = selectedVoice;
                 
                 u.onend = () => {
                     isSpeaking = false;
@@ -242,7 +295,7 @@
 
         document.getElementById('repeatBtn').addEventListener('click', () => {
             if (lastSpokenText) speak(lastSpokenText);
-            else speak('Hola, soy tu asistente.');
+            else speak('Hola, soy Lucía. ¿Qué tal?');
         });
         
         const chatContainer = document.getElementById('chatContainer');
