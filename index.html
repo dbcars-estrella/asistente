@@ -35,7 +35,7 @@
             font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 5px;
         }
         .repeat-btn:active { transform: scale(0.95); }
-        .message .time { display: block; font-size: 11px; opacity: 0.6; margin-top: 4px; }
+        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(192, 57, 43, 0); } 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); } }
     </style>
@@ -68,6 +68,7 @@
         let lastTopic = null;
         let lastMood = null;
         let conversationCount = 0;
+        let waitingForExplanation = null;
 
         // ---- UTILIDADES ----
         function setMemory(key, val) { localStorage.setItem('vc_mem_' + key, JSON.stringify(val)); }
@@ -75,24 +76,17 @@
         function normalize(s) { if(!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
         function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-        function addMessage(sender, text) {
-    const div = document.createElement('div');
-    div.className = 'message ' + (sender === 'Tú' ? 'user-message' : 'bot-message');
 
-    const textSpan = document.createElement('span');
-    textSpan.textContent = text;
+        // ---- EXTRAER PALABRA CLAVE PARA APRENDER ----
+        const STOPWORDS = ['que','de','la','el','los','las','un','una','y','o','es','son','con','por','para','en','a','se','su','mi','tu','lo','me','te','no','muy','mas','como','cuando','donde','porque','tambien','solo','hay','tiene','hacer','ser','estar','quiero','puedo','algo','todo','nada','esto','eso'];
 
-    const timeSpan = document.createElement('span');
-    timeSpan.className = 'time';
-    const now = new Date();
-    timeSpan.textContent = String(now.getHours()).padStart(2, '0') + ':' +
-                           String(now.getMinutes()).padStart(2, '0');
-
-    div.appendChild(textSpan);
-    div.appendChild(timeSpan);
-    chatContainer.appendChild(div);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-}
+        function extractKeyword(text) {
+            const words = normalize(text).replace(/[^\w\s]/g, '').split(/\s+/)
+                .filter(w => w.length >= 5 && !STOPWORDS.includes(w));
+            if (!words.length) return null;
+            words.sort((a, b) => b.length - a.length);
+            return words[0];
+        }
 
         // ---- DICCIONARIOS DE TEMAS ----
         const TEMAS = {
@@ -203,7 +197,6 @@
             const palabras = proc.split(/\s+/);
             const temasDetectados = [];
             
-            // Detectar temas por palabras clave
             for (let tema in TEMAS) {
                 for (let palabra of TEMAS[tema]) {
                     if (proc.includes(normalize(palabra))) {
@@ -213,16 +206,13 @@
                 }
             }
 
-            // Detectar si es un mensaje largo (más de 8 palabras)
             const esLargo = palabras.length > 8;
-            
-            // Detectar nombre del usuario en el mensaje
             const nameMatch = raw.match(/(?:mi nombre es|me llamo|soy)\s+([a-zA-Záéíóúñü\s]{2,30})/i);
 
             return { proc, palabras, temasDetectados, esLargo, nameMatch };
         }
 
-        // ---- FUNCIÓN DE APRENDIZAJE ----
+        // ---- FUNCIÓN DE APRENDIZAJE EXPLÍCITO ----
         function extractTeaching(raw) {
             let m1 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(.+?)\s+(?:es|son|significa|se llama)\s+(.+)/i);
             if (m1 && m1[1] && m1[2]) return { question: normalize(m1[1]), answer: m1[2].trim() };
@@ -235,11 +225,29 @@
 
         // ---- GENERADOR DE RESPUESTA ----
         function generateResponse(raw) {
+            // 0. ¿ESTÁBAMOS ESPERANDO UNA EXPLICACIÓN?
+            if (waitingForExplanation) {
+                const numPalabras = normalize(raw).split(/\s+/).length;
+                if (numPalabras >= 3) {
+                    const { keyword } = waitingForExplanation;
+                    const ck = getMemory('custom_knowledge') || {};
+                    ck[keyword] = raw;
+                    setMemory('custom_knowledge', ck);
+                    waitingForExplanation = null;
+                    return pickRandom([
+                        '¡Ah, ahora sí! Me lo apunto. Gracias por explicármelo, me encanta aprender cosas nuevas.',
+                        '¡Uy, qué interesante! Ya lo tengo guardado. Gracias.',
+                        '¡Vale, ya lo pillo! Apuntado. Me gusta que me enseñes cosas.'
+                    ]);
+                }
+                waitingForExplanation = null;
+            }
+
             const analisis = analizarMensaje(raw);
             const { proc, palabras, temasDetectados, esLargo, nameMatch } = analisis;
             conversationCount++;
 
-            // 1. APRENDIZAJE
+            // 1. APRENDIZAJE EXPLÍCITO ("aprende que X es Y")
             const teaching = extractTeaching(raw);
             if (teaching) {
                 let customKnowledge = getMemory('custom_knowledge') || {};
@@ -251,7 +259,9 @@
             // 2. BUSCAR EN LO APRENDIDO
             let customKnowledge = getMemory('custom_knowledge') || {};
             for (let key in customKnowledge) {
-                if (proc === key || proc.includes(key) || key.includes(proc)) return customKnowledge[key];
+                if (proc === key) return customKnowledge[key];
+                if (key.length >= 4 && proc.includes(key)) return customKnowledge[key];
+                if (proc.length >= 4 && key.includes(proc)) return customKnowledge[key];
             }
 
             // 3. NOMBRES
@@ -284,7 +294,7 @@
             const userName = getMemory('user_name');
             const userCall = userName ? userName : 'tío';
 
-            // 4. SALUDOS INICIALES (solo si es un saludo corto)
+            // 4. SALUDOS INICIALES
             if (palabras.length <= 4 && proc.match(/(hola|buenas|saludos|buenos dias|buenas tardes|buenas noches)/)) {
                 lastTopic = 'saludo';
                 const saludos = [
@@ -321,16 +331,12 @@
                 return 'Me encantaría tener un gato, pero como vivo de alquiler no me dejan. De momento me conformo con los de mis amigas.';
             }
 
-            // 6. RESPUESTA BASADA EN EL TEMA DETECTADO
+            // 6. RESPUESTA POR TEMA DETECTADO
             if (temasDetectados.length > 0) {
-                // Priorizar sentimientos (son los más importantes)
                 const prioridad = ['sentimientos_mal','sentimientos_bien','trabajo','tecnologia','amor','dinero','salud','estudios','musica','cine','comida','deporte','viajes','amistad','familia','futuro','clima','humor'];
-                
                 for (let temaPrioritario of prioridad) {
                     if (temasDetectados.includes(temaPrioritario) && RESPUESTAS[temaPrioritario]) {
                         lastTopic = temaPrioritario;
-                        
-                        // Si el mensaje es largo, añadir una coletilla de seguimiento
                         if (esLargo) {
                             let respuesta = pickRandom(RESPUESTAS[temaPrioritario]);
                             const coletillas = [
@@ -346,7 +352,7 @@
                 }
             }
 
-            // 7. RESPUESTAS DE SEGUIMIENTO (si es largo pero no detectamos tema claro)
+            // 7. RESPUESTAS DE SEGUIMIENTO SI ES LARGO
             if (esLargo) {
                 lastTopic = 'general_largo';
                 const respuestasLargas = [
@@ -380,14 +386,22 @@
                 return '¡Ay, qué bonito! Yo también te tengo cariño, ' + userCall + '. Eres un encanto.';
             }
 
-            // 11. FALLBACK INTELIGENTE (repite parte de lo que dijo el usuario)
-            const fallbacks = [
+            // 11. FALLBACK CON CURIOSIDAD
+            const keyword = extractKeyword(raw);
+            if (keyword) {
+                waitingForExplanation = { keyword };
+                return pickRandom([
+                    'Uy, eso no lo pillo. ¿Me lo explicas? Que quiero aprender.',
+                    'Mmm, no sé qué es eso. Explícamelo, por favor, que me pica la curiosidad.',
+                    'No conozco eso, la verdad. ¿Me lo cuentas? Me encanta aprender cosas nuevas.',
+                    'Me pillas, no sé de qué me hablas. ¿Me lo explicas? Quiero aprender.'
+                ]);
+            }
+
+            return pickRandom([
                 'A ver si te entiendo... ¿me lo explicas con otras palabras?',
-                'Pues no sé muy bien qué decirte a eso. ¿Cambiamos de tema o me cuentas más?',
-                'No te pillo del todo, la verdad. ¿A qué te refieres exactamente?',
-                'Uf, eso me pilla un poco fuera de juego. ¿Y tú qué opinas?'
-            ];
-            return pickRandom(fallbacks);
+                'Pues no sé qué decirte a eso. ¿Cambiamos de tema o me cuentas más?'
+            ]);
         }
         
         // ---- VOZ ----
