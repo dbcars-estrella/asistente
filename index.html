@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -17,17 +18,22 @@
         .status { font-size: 14px; color: #666; font-weight: 500; height: 20px; }
         
         .mic-btn { 
-            background: #34c759; color: white; border: none; border-radius: 50%; width: 80px; height: 80px; 
+            background: #34c759; color: white; border: none; border-radius: 50%; width: 70px; height: 70px; 
             display: flex; justify-content: center; align-items: center; cursor: pointer; 
-            transition: all 0.2s; box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4); font-size: 35px;
+            transition: all 0.2s; box-shadow: 0 4px 15px rgba(52, 199, 89, 0.4); font-size: 30px;
         }
         .mic-btn:active { transform: scale(0.9); }
         .mic-btn.listening { background: #ff3b30; animation: pulse 1.5s infinite; box-shadow: 0 4px 15px rgba(255, 59, 48, 0.4); }
         .mic-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
         
+        .input-area { display: flex; width: 100%; gap: 8px; margin-top: 5px; }
+        input[type="text"] { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 20px; font-size: 16px; outline: none; }
+        input[type="text"]:focus { border-color: var(--primary); }
+        .send-btn { background: var(--primary); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; }
+        
         .repeat-btn {
-            background: #5856d6; color: white; border: none; border-radius: 15px; padding: 10px 20px; 
-            font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 5px;
+            background: #5856d6; color: white; border: none; border-radius: 15px; padding: 8px 15px; 
+            font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 5px;
         }
         .repeat-btn:active { transform: scale(0.95); }
         
@@ -38,12 +44,18 @@
 <body>
     <div class="header">Asistente de Voz</div>
     <div class="chat-container" id="chatContainer">
-        <div class="message bot-message">¡Hola! Soy tu asistente. Puedes enseñarme cosas nuevas diciendo: "Aprende que mi color favorito es el azul" o "Aprende que si te digo buenos días, respondas buenos días, ¿cómo estás?".</div>
+        <div class="message bot-message">¡Hola! Soy tu asistente. Puedes hablarme por el micrófono o escribirme abajo. Para enseñarme algo, escribe: "Aprende que mi color favorito es el azul".</div>
     </div>
     
     <div class="controls">
-        <div class="status" id="statusText">Toca el micrófono para hablar</div>
+        <div class="status" id="statusText">Toca el micrófono o escribe un mensaje</div>
         <button class="mic-btn" id="micBtn">🎤</button>
+        
+        <div class="input-area">
+            <input type="text" id="inputText" placeholder="Escribe para enseñar o preguntar...">
+            <button class="send-btn" id="sendBtn">➤</button>
+        </div>
+        
         <button class="repeat-btn" id="repeatBtn">🔊 Probar sonido / Repetir</button>
     </div>
 
@@ -54,7 +66,6 @@
 
         function setMemory(key, val) { localStorage.setItem('vc_mem_' + key, JSON.stringify(val)); }
         function getMemory(key) { const v = localStorage.getItem('vc_mem_' + key); return v ? JSON.parse(v) : null; }
-        function clearAllMemory() { MEMORY_KEYS.forEach(k => localStorage.removeItem('vc_mem_' + k)); }
         
         function normalizeText(s) { if(!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -65,14 +76,12 @@
         function extractCity(raw) { let m = raw.match(/(?:vivo en|soy de|mi ciudad es)\s+([a-zA-Záéíóúñü\s]{2,40})/i); return m && m[1] ? capitalizeAll(m[1].trim()) : null; }
         function extractPref(raw) { let m = raw.match(/(?:me gusta(?:n)?|me encanta|soy fan de)\s+(.{2,60})/i); return m && m[1] ? m[1].trim().replace(/[\.\?\!]+$/,'') : null; }
 
-        // NUEVA FUNCIÓN: Extraer enseñanza de datos o de conversación
         function extractTeaching(raw) {
-            // Tipo 1: "Aprende que [algo] es [respuesta]"
+            // Aprender datos: "Aprende que X es Y"
             let m1 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(.+?)\s+(?:es|son|significa|se llama)\s+(.+)/i);
-            if (m1 && m1[1] && m1[2]) {
-                return { question: normalizeText(m1[1]), answer: m1[2].trim() };
-            }
-            // Tipo 2: "Aprende que si te digo [algo], respondas [respuesta]"
+            if (m1 && m1[1] && m1[2]) return { question: normalizeText(m1[1]), answer: m1[2].trim() };
+            
+            // Aprender conversación: "Aprende que si te digo X, respondas Y"
             let m2 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(?:si te digo|cuando te diga|cuando diga)\s+(.+?)\s*[,.]?\s*(?:respondas|me digas|dime|contesta)\s+(.+)/i);
             if (m2 && m2[1] && m2[2]) {
                 let cleanQ = m2[1].replace(/["'«»]/g, '').trim();
@@ -85,7 +94,7 @@
         function generateResponse(raw) {
             const proc = normalizeText(raw);
 
-            // 1. COMPROBAR SI LE ESTÁS ENSEÑANDO ALGO
+            // 1. APRENDIZAJE
             const teaching = extractTeaching(raw);
             if (teaching) {
                 let customKnowledge = getMemory('custom_knowledge') || {};
@@ -94,18 +103,16 @@
                 return '¡Entendido! He aprendido que ' + teaching.question + ' es ' + teaching.answer + '. Lo recordaré.';
             }
 
-            // 2. COMPROBAR SI PREGUNTAS ALGO QUE YA TE ENSEÑÓ
+            // 2. BUSCAR EN LO APRENDIDO
             let customKnowledge = getMemory('custom_knowledge') || {};
             for (let key in customKnowledge) {
-                if (proc === key || proc.includes(key) || key.includes(proc)) {
-                    return customKnowledge[key];
-                }
+                if (proc === key || proc.includes(key) || key.includes(proc)) return customKnowledge[key];
             }
 
-            // 3. MANEJADORES DE CONTEXTO (NOMBRES)
+            // 3. CONTEXTO DE NOMBRES
             if (waitingForBotName) {
                 let suggestedName = raw.replace(/^(te llamare|te voy a llamar|te llamas|tu nombre es|sera|te pongo por nombre|me gusta|me gustaria llamarte)\s+/i, '').replace(/[.!?]/g, '').trim();
-                if (suggestedName.length > 1 && suggestedName.length < 20 && !suggestedName.includes(' ') && !suggestedName.toLowerCase().includes('no')) {
+                if (suggestedName.length > 1 && suggestedName.length < 20 && !suggestedName.includes(' ')) {
                     setMemory('bot_name', capitalize(suggestedName));
                     waitingForBotName = false;
                     return '¡Me encanta el nombre de ' + capitalize(suggestedName) + '! A partir de ahora me llamo así. ¿Y tú cómo te llamas?';
@@ -123,13 +130,12 @@
                 waitingForUserName = false;
             }
 
-            // 4. PREGUNTAS SOBRE EL BOT Y EL USUARIO
+            // 4. PREGUNTAS BÁSICAS
             if (proc.match(/(como te llamas|tu nombre|como quieres que te llame|tienes nombre)/)) {
                 const botName = getMemory('bot_name');
                 if (botName) return 'Me llamo ' + botName + '. ¿Te gusta mi nombre?';
-                else { waitingForBotName = true; return 'Aún no tengo nombre. Me encantaría que tú me pusieras uno. ¿Cómo quieres llamarme?'; }
+                else { waitingForBotName = true; return 'Aún no tengo nombre. ¿Cómo quieres llamarme?'; }
             }
-
             if (proc.match(/(cual es mi nombre|como me llamo|sabes mi nombre)/)) {
                 const userName = getMemory('user_name');
                 if (userName) return 'Tu nombre es ' + userName + '.';
@@ -138,17 +144,17 @@
             }
 
             const name = extractName(raw); if (name) { setMemory('user_name', name); return 'Encantado de conocerte, ' + name + '. He guardado tu nombre.'; }
-            const age = extractAge(raw); if (age) { setMemory('user_age', age); return 'Perfecto, tienes ' + age + ' años. Lo he guardado.'; }
-            const city = extractCity(raw); if (city) { setMemory('user_city', city); return 'Entendido: vives en ' + city + '. Guardado.'; }
-            const pref = extractPref(raw); if (pref) { setMemory('user_pref', pref); return 'Okay, te gusta ' + pref + '. Lo guardé como preferencia.'; }
+            const age = extractAge(raw); if (age) { setMemory('user_age', age); return 'Perfecto, tienes ' + age + ' años.'; }
+            const city = extractCity(raw); if (city) { setMemory('user_city', city); return 'Entendido: vives en ' + city + '.'; }
+            const pref = extractPref(raw); if (pref) { setMemory('user_pref', pref); return 'Okay, te gusta ' + pref + '.'; }
             
             const userAge = getMemory('user_age'); const userCity = getMemory('user_city'); const userPref = getMemory('user_pref');
             
-            if (proc.match(/(cuantos anos tengo|mi edad)/)) return userAge ? 'Tienes ' + userAge + ' años.' : 'No tengo tu edad guardada. Dime: "Tengo 30 años".';
-            if (proc.match(/(donde vivo|mi ciudad)/)) return userCity ? 'Vives en ' + userCity + '.' : 'No sé dónde vives. Dime: "Vivo en Madrid".';
-            if (proc.match(/(que me gusta|mi preferencia)/)) return userPref ? 'Te gusta ' + userPref + '.' : 'No tengo preferencias tuyas guardadas. Dime: "Me gusta la música".';
+            if (proc.match(/(cuantos anos tengo|mi edad)/)) return userAge ? 'Tienes ' + userAge + ' años.' : 'No tengo tu edad guardada.';
+            if (proc.match(/(donde vivo|mi ciudad)/)) return userCity ? 'Vives en ' + userCity + '.' : 'No sé dónde vives.';
+            if (proc.match(/(que me gusta|mi preferencia)/)) return userPref ? 'Te gusta ' + userPref + '.' : 'No tengo preferencias tuyas guardadas.';
             
-            // 5. CONVERSACIÓN GENERAL
+            // 5. CONVERSACIÓN
             if (proc.match(/(hola|buenas|saludos|qué tal|cómo estás|buenos días|buenas tardes|buenas noches)/)) {
                 const userName = getMemory('user_name');
                 return userName ? '¡Hola, ' + userName + '! ¿Cómo estás hoy?' : '¡Hola! Soy tu asistente. ¿En qué puedo ayudarte hoy?';
@@ -158,8 +164,8 @@
             
             // 6. FALLBACK
             const fallbacks = [
-                'No estoy seguro de entender eso. Puedes enseñarme diciendo: "Aprende que..."',
-                'Lo siento, mi programación es básica. Prueba a decirme "Aprende que mi color favorito es el azul".',
+                'No estoy seguro de entender eso. Puedes enseñarme escribiendo: "Aprende que..."',
+                'Lo siento, mi programación es básica. Prueba a escribir "Aprende que mi color favorito es el azul".',
                 'No he entendido esa frase. ¿Puedes preguntarme algo más sencillo o enseñarme algo nuevo?'
             ];
             return fallbacks[Math.floor(Math.random() * fallbacks.length)];
@@ -187,7 +193,7 @@
                 
                 u.onend = () => {
                     isSpeaking = false;
-                    document.getElementById('statusText').textContent = 'Toca el micrófono para hablar';
+                    document.getElementById('statusText').textContent = 'Toca el micrófono o escribe un mensaje';
                 };
                 u.onerror = () => {
                     isSpeaking = false;
@@ -220,8 +226,8 @@
                     sendMessage(transcriptText);
                     transcriptText = '';
                 } else {
-                    document.getElementById('statusText').textContent = 'No te he oído. Toca para hablar';
-                dici }
+                    document.getElementById('statusText').textContent = 'No te he oído. Toca el micro o escribe.';
+                }
             };
         } else { 
             document.getElementById('micBtn').disabled = true; 
@@ -240,6 +246,7 @@
         });
         
         const chatContainer = document.getElementById('chatContainer');
+        const inputText = document.getElementById('inputText');
         
         function addMessage(sender, text) { 
             const div = document.createElement('div'); 
@@ -250,11 +257,25 @@
         }
         
         function sendMessage(text) { 
-            addMessage('Tú', text); 
-            const res = generateResponse(text); 
+            const cleanText = text.trim();
+            if (!cleanText) return;
+            addMessage('Tú', cleanText); 
+            const res = generateResponse(cleanText); 
             addMessage('Bot', res); 
             speak(res); 
         }
+
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            sendMessage(inputText.value);
+            inputText.value = '';
+        });
+
+        inputText.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage(inputText.value);
+                inputText.value = '';
+            }
+        });
     </script>
 </body>
 </html>
