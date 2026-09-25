@@ -1,4 +1,4 @@
-DOCTYPE html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -51,7 +51,6 @@ DOCTYPE html>
         const MEMORY_KEYS = ['user_name', 'user_age', 'user_city', 'user_pref'];
         function setMemory(key, val) { localStorage.setItem('vc_mem_' + key, JSON.stringify(val)); }
         function getMemory(key) { const v = localStorage.getItem('vc_mem_' + key); return v ? JSON.parse(v) : null; }
-        function clearAllMemory() { MEMORY_KEYS.forEach(k => localStorage.removeItem('vc_mem_' + k)); }
         
         function normalizeText(s) { if(!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
@@ -64,6 +63,8 @@ DOCTYPE html>
         
         function generateResponse(raw) {
             const proc = normalizeText(raw);
+            
+            // 1. Guardar datos
             const name = extractName(raw); if (name) { setMemory('user_name', name); return 'Encantado de conocerte, ' + name + '. He guardado tu nombre.'; }
             const age = extractAge(raw); if (age) { setMemory('user_age', age); return 'Perfecto, tienes ' + age + ' años. Lo he guardado.'; }
             const city = extractCity(raw); if (city) { setMemory('user_city', city); return 'Entendido: vives en ' + city + '. Guardado.'; }
@@ -72,12 +73,25 @@ DOCTYPE html>
             const userName = getMemory('user_name'); const userAge = getMemory('user_age'); const userCity = getMemory('user_city'); const userPref = getMemory('user_pref');
             if (!proc) return 'No he oído nada. ¿Puedes repetir?';
             
+            // 2. Preguntas sobre el asistente
+            if (proc.match(/(como te llamas|tu nombre|nombre femenino|como quieres que te llame|qué nombre te gusta)/)) {
+                return 'Aún no tengo nombre. Me encantaría que tú me pusieras uno. ¿Cómo quieres llamarme?';
+            }
+            if (proc.match(/(te llamare|te voy a llamar|te pongo por nombre)/)) {
+                let nuevoNombre = raw.replace(/(te llamare|te voy a llamar|te pongo por nombre)\s*/i, '').trim();
+                return '¡Me encanta el nombre de ' + nuevoNombre + '! A partir de ahora me llamo así.';
+            }
+            
+            // 3. Recuperar memoria
             if (proc.match(/(cual es mi nombre|como me llamo)/)) return userName ? 'Tu nombre es ' + userName + '.' : 'No tengo guardado tu nombre. Dime: "Mi nombre es Ana".';
             if (proc.match(/(cuantos anos tengo|mi edad)/)) return userAge ? 'Tienes ' + userAge + ' años.' : 'No tengo tu edad guardada. Dime: "Tengo 30 años".';
             if (proc.match(/(donde vivo|mi ciudad)/)) return userCity ? 'Vives en ' + userCity + '.' : 'No sé dónde vives. Dime: "Vivo en Madrid".';
             if (proc.match(/(que me gusta|mi preferencia)/)) return userPref ? 'Te gusta ' + userPref + '.' : 'No tengo preferencias tuyas guardadas. Dime: "Me gusta la música".';
+            
+            // 4. Saludos y general
             if (proc.match(/(hola|buenas|saludos)/)) return userName ? '¡Hola, ' + userName + '! ¿En qué puedo ayudarte?' : '¡Hola! Soy tu asistente. ¿En qué puedo ayudarte?';
             if (proc.includes('hora')) { const d = new Date(); return 'Ahora son las ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0'); }
+            
             return 'No estoy seguro de entender eso. ¿Puedes pedirlo de otra forma o decirme un dato como "Tengo 30 años"?';
         }
         
@@ -91,16 +105,13 @@ DOCTYPE html>
         function speak(text) {
             if (!window.speechSynthesis) return;
             window.speechSynthesis.cancel(); 
-            
             isSpeaking = true;
             lastSpokenText = text;
             document.getElementById('statusText').textContent = 'Hablando...';
             
-            // RETARDO CRÍTICO: iOS necesita 600ms para soltar el micrófono antes de usar el altavoz
             setTimeout(() => {
                 const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'es-ES'; 
-                u.rate = 1.0;
+                u.lang = 'es-ES'; u.rate = 1.0;
                 const spanishVoice = voices.find(v => v.lang.startsWith('es'));
                 if (spanishVoice) u.voice = spanishVoice;
                 
@@ -110,11 +121,11 @@ DOCTYPE html>
                 };
                 u.onerror = () => {
                     isSpeaking = false;
-                    document.getElementById('statusText').textContent = 'Error de audio. Toca "Probar sonido".';
+                    document.getElementById('statusText').textContent = 'Error de audio.';
                 };
                 
                 window.speechSynthesis.speak(u);
-                window.speechSynthesis.resume(); // Forzar reproducción
+                window.speechSynthesis.resume();
             }, 600);
         }
         
@@ -129,26 +140,12 @@ DOCTYPE html>
             recognition.interimResults = false; 
             recognition.maxAlternatives = 1;
             
-            recognition.onstart = () => { 
-                isListening = true; 
-                document.getElementById('micBtn').classList.add('listening'); 
-                document.getElementById('statusText').textContent = 'Escuchando...'; 
-            };
-            
-            recognition.onresult = (event) => { 
-                transcriptText = event.results[0][0].transcript; 
-            };
-            
-            recognition.onerror = (event) => { 
-                isListening = false; 
-                document.getElementById('micBtn').classList.remove('listening'); 
-                document.getElementById('statusText').textContent = 'Error. Toca para reintentar';
-            };
-            
+            recognition.onstart = () => { isListening = true; document.getElementById('micBtn').classList.add('listening'); document.getElementById('statusText').textContent = 'Escuchando...'; };
+            recognition.onresult = (event) => { transcriptText = event.results[0][0].transcript; };
+            recognition.onerror = (event) => { isListening = false; document.getElementById('micBtn').classList.remove('listening'); document.getElementById('statusText').textContent = 'Error. Toca para reintentar'; };
             recognition.onend = () => { 
                 isListening = false; 
                 document.getElementById('micBtn').classList.remove('listening'); 
-                
                 if (transcriptText && transcriptText.trim() !== '') {
                     sendMessage(transcriptText);
                     transcriptText = '';
@@ -163,20 +160,13 @@ DOCTYPE html>
         
         document.getElementById('micBtn').addEventListener('click', () => {
             if (!recognition || isSpeaking) return;
-            if (isListening) {
-                recognition.stop();
-            } else {
-                window.speechSynthesis.cancel();
-                recognition.start();
-            }
+            if (isListening) recognition.stop();
+            else { window.speechSynthesis.cancel(); recognition.start(); }
         });
 
         document.getElementById('repeatBtn').addEventListener('click', () => {
-            if (lastSpokenText) {
-                speak(lastSpokenText);
-            } else {
-                speak('Hola, soy tu asistente. Si escuchas esta voz, el audio funciona correctamente.');
-            }
+            if (lastSpokenText) speak(lastSpokenText);
+            else speak('Hola, soy tu asistente.');
         });
         
         const chatContainer = document.getElementById('chatContainer');
