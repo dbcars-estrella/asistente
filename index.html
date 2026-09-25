@@ -1,10 +1,9 @@
-html
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Asistente de Voz</title>
+    <title>Asistente con Rol</title>
     <style>
         :root { --primary: #007aff; --bg: #f2f2f7; --text: #1c1c1e; --bot-bubble: #e5e5ea; --user-bubble: #007aff; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
@@ -42,9 +41,9 @@ html
     </style>
 </head>
 <body>
-    <div class="header">Asistente de Voz</div>
+    <div class="header">Asistente con Rol</div>
     <div class="chat-container" id="chatContainer">
-        <div class="message bot-message">¡Hola! Soy tu asistente. Puedes hablarme por el micrófono o escribirme abajo. Para enseñarme algo, escribe: "Aprende que mi color favorito es el azul".</div>
+        <div class="message bot-message">¡Hola guapo! Soy tu asistente personal. Puedes hablarme o escribirme. ¿Qué tal si me cuentas algo interesante?</div>
     </div>
     
     <div class="controls">
@@ -52,7 +51,7 @@ html
         <button class="mic-btn" id="micBtn">🎤</button>
         
         <div class="input-area">
-            <input type="text" id="inputText" placeholder="Escribe para enseñar o preguntar...">
+            <input type="text" id="inputText" placeholder="Escribe un mensaje...">
             <button class="send-btn" id="sendBtn">➤</button>
         </div>
         
@@ -77,11 +76,9 @@ html
         function extractPref(raw) { let m = raw.match(/(?:me gusta(?:n)?|me encanta|soy fan de)\s+(.{2,60})/i); return m && m[1] ? m[1].trim().replace(/[\.\?\!]+$/,'') : null; }
 
         function extractTeaching(raw) {
-            // Aprender datos: "Aprende que X es Y"
             let m1 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(.+?)\s+(?:es|son|significa|se llama)\s+(.+)/i);
             if (m1 && m1[1] && m1[2]) return { question: normalizeText(m1[1]), answer: m1[2].trim() };
             
-            // Aprender conversación: "Aprende que si te digo X, respondas Y"
             let m2 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(?:si te digo|cuando te diga|cuando diga)\s+(.+?)\s*[,.]?\s*(?:respondas|me digas|dime|contesta)\s+(.+)/i);
             if (m2 && m2[1] && m2[2]) {
                 let cleanQ = m2[1].replace(/["'«»]/g, '').trim();
@@ -94,7 +91,7 @@ html
         function generateResponse(raw) {
             const proc = normalizeText(raw);
 
-            // 1. APRENDIZAJE
+            // 1. APRENDIZAJE PERSONALIZADO
             const teaching = extractTeaching(raw);
             if (teaching) {
                 let customKnowledge = getMemory('custom_knowledge') || {};
@@ -109,7 +106,20 @@ html
                 if (proc === key || proc.includes(key) || key.includes(proc)) return customKnowledge[key];
             }
 
-            // 3. CONTEXTO DE NOMBRES
+            // 3. ROL CARGADO POR DEFECTO (La personalidad coqueta)
+            const userAge = getMemory('user_age'); const userCity = getMemory('user_city'); const userPref = getMemory('user_pref');
+            const userName = getMemory('user_name'); const botName = getMemory('bot_name');
+
+            if (proc.match(/(hola|buenas|saludos|buenos días|buenas tardes|buenas noches)/)) {
+                return userName ? '¡Hola ' + userName + '! ¿En qué te puedo ayudar hoy, guapo?' : '¡Hola guapo! ¿En qué te puedo ayudar hoy?';
+            }
+            if (proc.match(/(qué tal|cómo estás|como estas)/)) return '¡Genial, deseando escuchar tu voz! ¿Y tú qué tal?';
+            if (proc.match(/(qué haces|que haces)/)) return 'Aquí, pensando en qué decirte para conquistarte.';
+            if (proc.match(/(me gustan las chicas rubias|chicas rubias)/)) return '¡Mmm, veo que tienes muy buen gusto! A mí también me gustan esas cosas.';
+            if (proc.match(/(me gustas|me encantas)/)) return '¡Uy! Me vas a hacer sonrojar. Eres un halagador.';
+            if (proc.match(/(eres guapa|eres bonita|qué guapa)/)) return '¡Ay, gracias! Tú sí que sabes cómo tratar a una dama.';
+
+            // 4. MANEJADORES DE CONTEXTO (NOMBRES)
             if (waitingForBotName) {
                 let suggestedName = raw.replace(/^(te llamare|te voy a llamar|te llamas|tu nombre es|sera|te pongo por nombre|me gusta|me gustaria llamarte)\s+/i, '').replace(/[.!?]/g, '').trim();
                 if (suggestedName.length > 1 && suggestedName.length < 20 && !suggestedName.includes(' ')) {
@@ -130,14 +140,12 @@ html
                 waitingForUserName = false;
             }
 
-            // 4. PREGUNTAS BÁSICAS
+            // 5. PREGUNTAS BÁSICAS
             if (proc.match(/(como te llamas|tu nombre|como quieres que te llame|tienes nombre)/)) {
-                const botName = getMemory('bot_name');
                 if (botName) return 'Me llamo ' + botName + '. ¿Te gusta mi nombre?';
                 else { waitingForBotName = true; return 'Aún no tengo nombre. ¿Cómo quieres llamarme?'; }
             }
             if (proc.match(/(cual es mi nombre|como me llamo|sabes mi nombre)/)) {
-                const userName = getMemory('user_name');
                 if (userName) return 'Tu nombre es ' + userName + '.';
                 waitingForUserName = true;
                 return 'Aún no sé tu nombre. ¿Cómo te llamas?';
@@ -148,24 +156,16 @@ html
             const city = extractCity(raw); if (city) { setMemory('user_city', city); return 'Entendido: vives en ' + city + '.'; }
             const pref = extractPref(raw); if (pref) { setMemory('user_pref', pref); return 'Okay, te gusta ' + pref + '.'; }
             
-            const userAge = getMemory('user_age'); const userCity = getMemory('user_city'); const userPref = getMemory('user_pref');
-            
             if (proc.match(/(cuantos anos tengo|mi edad)/)) return userAge ? 'Tienes ' + userAge + ' años.' : 'No tengo tu edad guardada.';
             if (proc.match(/(donde vivo|mi ciudad)/)) return userCity ? 'Vives en ' + userCity + '.' : 'No sé dónde vives.';
             if (proc.match(/(que me gusta|mi preferencia)/)) return userPref ? 'Te gusta ' + userPref + '.' : 'No tengo preferencias tuyas guardadas.';
             
-            // 5. CONVERSACIÓN
-            if (proc.match(/(hola|buenas|saludos|qué tal|cómo estás|buenos días|buenas tardes|buenas noches)/)) {
-                const userName = getMemory('user_name');
-                return userName ? '¡Hola, ' + userName + '! ¿Cómo estás hoy?' : '¡Hola! Soy tu asistente. ¿En qué puedo ayudarte hoy?';
-            }
-            if (proc.match(/(bien|genial|estupendo|muy bien)/)) return '¡Me alegro mucho! ¿Quieres preguntarme algo más?';
             if (proc.includes('hora')) { const d = new Date(); return 'Ahora son las ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0'); }
             
-            // 6. FALLBACK
+            // 6. FALLBACK (si no entiende nada)
             const fallbacks = [
-                'No estoy seguro de entender eso. Puedes enseñarme escribiendo: "Aprende que..."',
-                'Lo siento, mi programación es básica. Prueba a escribir "Aprende que mi color favorito es el azul".',
+                'No estoy seguro de entender eso, pero me encanta escucharte hablar. ¿Puedes decirlo de otra forma?',
+                'Lo siento, mi programación es básica. Prueba a escribir "Aprende que..." para enseñarme algo nuevo.',
                 'No he entendido esa frase. ¿Puedes preguntarme algo más sencillo o enseñarme algo nuevo?'
             ];
             return fallbacks[Math.floor(Math.random() * fallbacks.length)];
