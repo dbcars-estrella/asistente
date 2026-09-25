@@ -75,6 +75,24 @@
         function normalize(s) { if(!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
         function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
         function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function addMessage(sender, text) {
+    const div = document.createElement('div');
+    div.className = 'message ' + (sender === 'Tú' ? 'user-message' : 'bot-message');
+
+    const textSpan = document.createElement('span');
+    textSpan.textContent = text;
+
+    const timeSpan = document.createElement('span');
+    timeSpan.className = 'time';
+    const now = new Date();
+    timeSpan.textContent = String(now.getHours()).padStart(2, '0') + ':' +
+                           String(now.getMinutes()).padStart(2, '0');
+
+    div.appendChild(textSpan);
+    div.appendChild(timeSpan);
+    chatContainer.appendChild(div);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 
         // ---- DICCIONARIOS DE TEMAS ----
         const TEMAS = {
