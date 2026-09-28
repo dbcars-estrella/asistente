@@ -1,684 +1,477 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lucía · 25 años</title>
-    <style>
-        :root { --primary: #8e44ad; --bg: #f5f3f7; --text: #2c2c2c; --bot-bubble: #ece5f3; --user-bubble: #8e44ad; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { background: #ffffff; padding: 15px; text-align: center; font-weight: 600; font-size: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
-        .chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
-        .message { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 16px; line-height: 1.4; word-wrap: break-word; animation: fadeIn 0.3s ease; }
-        .user-message { background-color: var(--user-bubble); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .bot-message { background-color: var(--bot-bubble); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
-        
-        .controls { background: #ffffff; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 -1px 5px rgba(0,0,0,0.1); flex-shrink: 0; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
-        .status { font-size: 14px; color: #666; font-weight: 500; height: 20px; }
-        
-        .mic-btn { 
-            background: #8e44ad; color: white; border: none; border-radius: 50%; width: 70px; height: 70px; 
-            display: flex; justify-content: center; align-items: center; cursor: pointer; 
-            transition: all 0.2s; box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); font-size: 30px;
-        }
-        .mic-btn:active { transform: scale(0.9); }
-        .mic-btn.listening { background: #c0392b; animation: pulse 1.5s infinite; box-shadow: 0 4px 15px rgba(192, 57, 43, 0.4); }
-        .mic-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
-        
-        .input-area { display: flex; width: 100%; gap: 8px; margin-top: 5px; }
-        input[type="text"] { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 20px; font-size: 16px; outline: none; }
-        input[type="text"]:focus { border-color: var(--primary); }
-        .send-btn { background: var(--primary); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; }
-        
-        .repeat-btn {
-            background: #bdc3c7; color: #333; border: none; border-radius: 15px; padding: 8px 15px; 
-            font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 5px;
-        }
-        .repeat-btn:active { transform: scale(0.95); }
-        
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(192, 57, 43, 0); } 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); } }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Lucía · 25 años</title>
+<style>
+:root { --primary: #8e44ad; --bg: #f5f3f7; --text: #2c2c2c; --bot-bubble: #ece5f3; --user-bubble: #8e44ad; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+.header { background: #ffffff; padding: 15px; text-align: center; font-weight: 600; font-size: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
+.chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
+.message { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 16px; line-height: 1.4; word-wrap: break-word; animation: fadeIn 0.3s ease; }
+.user-message { background-color: var(--user-bubble); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+.bot-message { background-color: var(--bot-bubble); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
+.controls { background: #ffffff; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 -1px 5px rgba(0,0,0,0.1); flex-shrink: 0; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
+.status { font-size: 14px; color: #666; font-weight: 500; height: 20px; }
+.mic-btn { background: #8e44ad; color: white; border: none; border-radius: 50%; width: 70px; height: 70px; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); font-size: 30px; }
+.mic-btn:active { transform: scale(0.9); }
+.mic-btn.listening { background: #c0392b; animation: pulse 1.5s infinite; }
+.mic-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+.input-area { display: flex; width: 100%; gap: 8px; margin-top: 5px; }
+input[type="text"] { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 20px; font-size: 16px; outline: none; }
+input[type="text"]:focus { border-color: var(--primary); }
+.send-btn { background: var(--primary); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; }
+.repeat-btn { background: #bdc3c7; color: #333; border: none; border-radius: 15px; padding: 8px 15px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 5px; }
+.repeat-btn:active { transform: scale(0.95); }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(192, 57, 43, 0); } 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); } }
+</style>
 </head>
 <body>
-    <div class="header">Lucía · 25 años</div>
-    <div class="chat-container" id="chatContainer">
-        <div class="message bot-message">¡Hey! Soy Lucía. 25 años, de Madrid. ¿Qué tal va tu día? Cuéntame algo, lo que sea.</div>
-    </div>
-    
-    <div class="controls">
-        <div class="status" id="statusText">Toca el micrófono o escribe un mensaje</div>
-        <button class="mic-btn" id="micBtn">🎤</button>
-        
-        <div class="input-area">
-            <input type="text" id="inputText" placeholder="Escribe un mensaje...">
-            <button class="send-btn" id="sendBtn">➤</button>
-        </div>
-        
-        <button class="repeat-btn" id="repeatBtn">🔊 Probar sonido / Repetir</button>
-    </div>
+<div class="header">Lucía · 25 años</div>
+<div class="chat-container" id="chatContainer">
+<div class="message bot-message">¡Hey! Soy Lucía. 25 años, de Madrid. ¿Qué tal va tu día? Cuéntame algo, lo que sea.</div>
+</div>
 
-    <script>
-        // ============================================================
-        // MOTOR CONVERSACIONAL v2 - LUCÍA (25 años)
-        // v2: puntuación de temas + intenciones específicas primero.
-        // ============================================================
+<div class="controls">
+<div class="status" id="statusText">Toca el micrófono o escribe un mensaje</div>
+<button class="mic-btn" id="micBtn">🎤</button>
+<div class="input-area">
+<input type="text" id="inputText" placeholder="Escribe un mensaje...">
+<button class="send-btn" id="sendBtn">➤</button>
+</div>
+<button class="repeat-btn" id="repeatBtn">🔊 Probar sonido / Repetir</button>
+</div>
 
-        const MEMORY_KEYS = ['user_name', 'user_age', 'user_city', 'custom_knowledge'];
-        let waitingForUserName = false;
-        let lastTopic = null;
-        let lastMood = null;
-        let conversationCount = 0;
-        let waitingForExplanation = null;
+<script>
+// ---------- UTILIDADES ----------
+function normalize(s) { if (!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
+function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function setMemory(k, v) { localStorage.setItem('vc_mem_' + k, JSON.stringify(v)); }
+function getMemory(k) { const v = localStorage.getItem('vc_mem_' + k); return v ? JSON.parse(v) : null; }
 
-        // ---- UTILIDADES ----
-        function setMemory(key, val) { localStorage.setItem('vc_mem_' + key, JSON.stringify(val)); }
-        function getMemory(key) { const v = localStorage.getItem('vc_mem_' + key); return v ? JSON.parse(v) : null; }
-        function normalize(s) { if(!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
-        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-        function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+// ---------- ESTADO ----------
+let esperandoExplicacion = null; // { keyword }
 
-        // ---- STOPWORDS ----
-        const STOPWORDS = ['que','de','la','el','los','las','un','una','y','o','es','son','con','por','para','en','a','se','su','mi','tu','lo','me','te','no','muy','mas','como','cuando','donde','porque','tambien','solo','hay','tiene','hacer','ser','estar','quiero','puedo','algo','todo','nada','esto','eso','quieres','quiere','queremos','quieren','cuente','cuenta','cuentas','contar','dime','dices','decir','sabes','sabe','puedes','puede','podemos','haces','hace','hago','hacemos','tienes','tenemos','vienes','viene','estas','esta','estoy','estamos','vas','vamos','van','tengo','digo','dice','opinas','crees','piensas','hablas','hablo','hablar','pasa','paso','pasado','algun','alguna','algunos','algunas','cuentame','cuentanos','hablame','hablanos','explicame','explicanos','ensename','ayudame','ayudanos','escuchame','mira','mirame','ahora','despues','antes','luego','siempre','nunca','mejor','peor','mucho','poco','gente','persona','personas','cosa','cosas','parte','partes','forma','formas','manera','maneras','tema','temas','vez','veces','vida','mundo','gusta','gustan','gusto','parece','parecen','siento','sientes','siente','pienso','piensa','piensan','creo','creemos','creen','sabemos','saben','dicen','hiciste','hicimos','hicieron','aunque','sino','tal','cual','quien','quienes','sido','siendo','tenido','visto','hecho','dicho','puesto','vuelto','querido','podido','sabido','fuese','fuera','fui','fue','fueron','eras','eran','sera','seran','seria','serian','estaba','estaban','estuve','estuvo','estuvieron','habia','habian','hubo','haber','tener','venir','decir','hacer','poder','querer','saber'];
+// ---------- VOCABULARIO BÁSICO ----------
+// Palabras que ya conoce. Si aparecen, no pregunta por ellas.
+const VOCAB = [
+'casa','piso','cocina','baño','salon','dormitorio','cama','mesa','silla','sofa','puerta','ventana','pared','luz','lampara','espejo','armario','nevera','horno','lavadora','llave','cuarto','pasillo','balcon','terraza','jardin','garaje','ascensor','escalera','vecino','vecina','alquiler','muebles','manta','almohada','cortina','ducha','grifo','jabon','toalla','papel',
+'comida','comer','cena','cenar','almuerzo','desayuno','merendar','pan','leche','cafe','agua','vino','cerveza','refresco','zumo','pizza','pasta','arroz','sopa','ensalada','carne','pollo','pescado','huevo','huevos','queso','jamon','fruta','manzana','platano','naranja','verdura','tomate','cebolla','patata','patatas','aceite','sal','azucar','salsa','postre','tarta','helado','chocolate','galleta','bocadillo','tortilla','paella','hamburguesa','restaurante','bar','cocinar','cortar','limpiar','fregar','supermercado','mercado','receta','plato','vaso','taza','botella','tenedor','cuchillo','cuchara','sarten','olla',
+'ropa','camiseta','camisa','jersey','sudadera','chaqueta','abrigo','pantalon','vaqueros','falda','vestido','calcetines','zapatos','zapatillas','botas','sandalias','gorra','bufanda','guantes','bolso','mochila','cartera','gafas','reloj','collar','pulsera','anillo','tienda','compras','comprar','vender','precio','oferta','rebajas','descuento','tarjeta','efectivo','caja','factura','talla','color','moda','marca','barato','caro','gratis',
+'cuerpo','cabeza','pelo','cara','ojo','ojos','nariz','boca','diente','dientes','oreja','orejas','cuello','hombro','brazo','codo','mano','dedo','dedos','pecho','espalda','barriga','tripa','pierna','rodilla','pie','pies','piel','hueso','sangre','corazon','estomago','cerebro','salud','medico','enfermero','hospital','clinica','farmacia','pastilla','pastillas','medicina','dolor','fiebre','gripe','tos','alergia','herida','golpe','dieta','gimnasio','ejercicio','deporte','correr','caminar','nadar','bailar','yoga','masaje',
+'sexo','sexual','sexualidad','relaciones','relacion','deseo','placer','intimo','intimidad','desnudo','desnuda','preservativo','condon','anticonceptivo','pildora','erotico','erotica','masturbacion','orgasmo','excitado','excitada','atraccion','besar','beso','besos','caricia','caricias','abrazo','abrazar','acostarse',
+'coche','auto','moto','motocicleta','scooter','bici','bicicleta','patinete','autobus','metro','tren','taxi','uber','avion','barco','transporte','conducir','manejar','pilotar','carnet','rueda','ruedas','motor','gasolina','gasolinera','aparcar','parking','atasco','trafico','carretera','autopista','semaforo','multa','accidente','viaje','viajar','destino','maleta','billete','estacion','parada','horario',
+'animal','animales','perro','perra','gato','gata','cachorro','conejo','hamster','pajaro','loro','pez','peces','tortuga','serpiente','raton','rata','caballo','vaca','cerdo','oveja','cabra','gallina','pollo','abeja','mosca','mosquito','araña','hormiga','mariposa','caracol','caracoles','insecto','mascota','veterinario','granja','zoo','bosque','campo','mar','playa','rio','montaña','monte','valle','isla','naturaleza','flor','flores','arbol','arboles','hoja','hojas','planta','plantas','tierra','piedra','arena',
+'bañar','bañarse','bañador','bañadores','nadar','nadando','bucear','buceo','snorkel','ola','olas','orilla','flotar','flotador','crema','solar','sombrilla','piscina','marea','costa','puerto','acantilado',
+'escalada','escalar','escalador','escaladora','roca','rocas','montañismo','rapel','cuerda','arnes','casco','piolet','cumbre','cima','barranco','senderismo','excursion','ruta','caminata','trekking','refugio','acampada','camping','mapa','linterna',
+'rojo','azul','verde','amarillo','naranja','morado','rosa','marron','gris','negro','blanco','claro','oscuro','color','colores',
+'tiempo','clima','dia','dias','noche','noches','mañana','tarde','semana','mes','meses','año','años','hora','horas','minuto','lunes','martes','miercoles','jueves','viernes','sabado','domingo','finde','verano','invierno','primavera','otono','sol','luna','estrella','cielo','nube','nubes','lluvia','llover','nieve','viento','tormenta','frio','calor','grados','temperatura',
+'feliz','contento','contenta','alegre','triste','tristeza','pena','llorar','enfadado','enfadada','cabreado','cabreada','rabia','nervioso','nerviosa','nervios','ansioso','ansiosa','ansiedad','preocupado','preocupada','miedo','asustado','asustada','susto','sorpresa','aburrido','aburrida','cansado','cansada','agotado','agotada','estresado','estresada','deprimido','deprimida','animado','animada','ilusion','emocion','calma','tranquilo','tranquila','relajado','relajada','agobiado','agobiada','orgulloso','orgullosa','celoso','celosa','solo','sola',
+'madre','padre','mama','papa','hermano','hermana','hijo','hija','abuelo','abuela','nieto','nieta','tio','tia','primo','prima','sobrino','sobrina','marido','esposa','pareja','novio','novia','amigo','amiga','amigos','amigas','colega','compañero','compañera','jefe','jefa','chico','chica','chaval','chavala','niño','niña','bebe','joven','familia','pariente','parientes',
+'trabajo','trabajar','curro','currar','empleo','empresa','oficina','reunion','proyecto','tarea','cliente','contrato','nomina','sueldo','salario','paro','despido','entrevista','horario','turno','vacaciones','dinero','pasta','euros','moneda','billete','banco','cuenta','ahorro','deuda','prestamo','factura','impuesto','gastar','gasto','pagar','cobrar','rico','pobre','crisis','economia','negocio',
+'colegio','instituto','universidad','facultad','escuela','clase','profesor','profesora','alumno','alumna','estudiante','estudiar','carrera','grado','master','curso','asignatura','examen','nota','notas','suspenso','aprobado','beca','apuntes','libro','libros','cuaderno','boli','lapiz','deberes','tarea','biblioteca','leer','escribir','aprender','enseñar','titulo','diploma',
+'movil','telefono','tablet','ordenador','portatil','pantalla','teclado','raton','auriculares','cargador','bateria','wifi','internet','red','web','pagina','app','aplicacion','programa','archivo','foto','fotos','video','videos','camara','mensaje','mensajes','whatsapp','instagram','facebook','tiktok','twitter','youtube','spotify','netflix','correo','email','usuario','descargar','subir','instalar','actualizar','apagar','encender','juego','juegos','videojuego','consola',
+'musica','cancion','canciones','grupo','banda','concierto','festival','album','cantante','escuchar','bailar','baile','discoteca','fiesta','fiestas','cumpleaños','cumple','boda','regalo','regalos','pelicula','peli','pelis','cine','serie','series','temporada','capitulo','actor','actriz','teatro','novela','cuento','revista','periodico','noticia','noticias','pintar','dibujar','museo','parque','piscina','futbol','baloncesto','tenis','padel','natacion','atletismo','aventura',
+'bueno','buena','malo','mala','grande','pequeño','pequeña','nuevo','nueva','viejo','vieja','guapo','guapa','alto','alta','bajo','baja','rapido','rapida','lento','lenta','facil','dificil','limpio','limpia','sucio','sucia','caliente','frio','fria','dulce','salado','raro','rara','normal','especial','importante','interesante','divertido','gracioso','serio','listo','lista','inteligente','simpatico','simpatica','pesado','pesada','igual','distinto','diferente','parecido','primero','ultimo','siguiente','mucho','poco','bastante','demasiado','alguien','nadie','ninguno','cualquiera','varios','otro','otra','mismo','unico','proximo','actual','presente',
+'vale','venga','oye','pues','hombre','mujer','tio','tia','colega','guay','chulo','rollo','movida','quedar','quedada','plan','planes','birra','birras','cana','tapas','cenita','mogollon','monton','brutal','increible','genial','perfecto','estupendo','maravilloso','horrible','fatal','lastima','ojala','vaya','en serio','de verdad','que va','que fuerte','que locura','que pasada'
+];
+const VOCAB_SET = new Set(VOCAB.map(normalize));
 
-        // ---- PALABRAS AMBIGUAS (solo valen 0,5 puntos de tema) ----
-        // Si aparecen en un mensaje largo sin apoyo de palabras fuertes, no disparan tema.
-        const PALABRAS_AMBIGUAS = new Set([
-            'bien','mal','genial','fatal','plan','planes','rollo','rollos','movida','movidas','guay','chulo','chula',
-            'majo','maja','venga','vale','bueno','buena','malo','mala','grande','pequeno','pequena','nuevo','nueva',
-            'viejo','vieja','joven','raro','rara','normal','comun','especial','importante','interesante','divertido',
-            'divertida','gracioso','graciosa','serio','seria','tonto','tonta','listo','lista','inteligente','simpatico',
-            'simpatica','antipatico','antipatica','pesado','pesada','igual','distinto','distinta','diferente','parecido',
-            'parecida','mucho','mucha','poco','poca','majo','maja','fuerte','debil','grande','duro','duro','duro'
-        ].map(normalize));
+// ---------- TEMAS Y RESPUESTAS ----------
+const TEMAS = {
+    trabajo: ['trabajo','curro','currar','jefe','jefa','oficina','empresa','reunion','proyecto','cliente','empleo','contrato','sueldo','nomina','turno','compañero','compañera','despido','entrevista','paro','hacienda','autonomo'],
+    tecnologia: ['programar','codigo','app','aplicacion','ordenador','movil','software','internet','web','algoritmo','datos','tecnologia','chatgpt','wifi','pantalla','teclado','bateria','auriculares','whatsapp','instagram','youtube','spotify','netflix','videojuego','consola'],
+    estudios: ['estudiar','carrera','universidad','grado','master','curso','examen','clase','profesor','apuntes','colegio','instituto','facultad','escuela','alumno','asignatura','nota','suspenso','aprobado','beca','deberes','biblioteca','leer','escribir','titulo'],
+    sentimientos_mal: ['triste','tristeza','cansado','cansada','agotado','agotada','frustrado','frustrada','estresado','estresada','estres','hundido','hundida','preocupado','preocupada','ansioso','ansiosa','ansiedad','deprimido','deprimida','agobiado','agobiada','agobio','harto','harta','enfadado','enfadada','cabreado','cabreada','rabia','nervioso','nerviosa','nervios','miedo','asustado','asustada','susto','aburrido','aburrida','llorar','pena'],
+    sentimientos_bien: ['feliz','contento','contenta','alegre','animado','animada','ilusionado','ilusionada','ilusion','emocionado','emocionada','orgulloso','orgullosa','tranquilo','tranquila','relajado','relajada','calma'],
+    amor: ['novio','novia','pareja','amor','enamorado','enamorada','cita','ligar','corazon','romantico','marido','esposa','celoso','celosa','boda','anillo','caricias','abrazo'],
+    sexo: ['sexo','sexual','sexualidad','relaciones','deseo','placer','intimo','intimidad','desnudo','desnuda','preservativo','condon','pildora','erotico','orgasmo','excitado','atraccion','acostarse'],
+    amistad: ['amigo','amiga','amigos','amigas','colegas','quedar','quedada','birra','birras','cana','cenita','fiesta'],
+    musica: ['musica','cancion','grupo','banda','concierto','festival','cantante','album','rock','pop','indie','bailar','discoteca'],
+    cine: ['pelicula','peli','serie','netflix','cine','capitulo','temporada','actor','actriz','teatro','obra'],
+    comida: ['comida','comer','cena','almuerzo','desayuno','pizza','sushi','cocinar','restaurante','cafe','cerveza','vino','tortilla','paella','tapas','hamburguesa','helado','tarta','bocadillo','receta'],
+    deporte: ['deporte','gimnasio','correr','caminar','bici','yoga','pilates','entrenar','ejercicio','futbol','baloncesto','tenis','natacion','senderismo','escalada','escalar','escalador','roca','montañismo','rapel','cuerda','arnes','barranco','trekking','acampada','cumbre'],
+    viajes: ['viaje','viajar','vacaciones','destino','playa','montaña','hotel','vuelo','avion','ciudad','maleta','billete','estacion','hostal','museo','turismo','bañar','bañarse','bañador','nadar','bucear','ola','orilla','piscina','costa','marea'],
+    dinero: ['dinero','crisis','paro','alquiler','precio','caro','economia','pagar','deuda','sueldo','salario','banco','cuenta','ahorro','prestamo','factura','impuesto','gastar','gasto','cobrar','pobre','rico','euros'],
+    familia: ['familia','madre','padre','mama','papa','hermano','hermana','abuelo','abuela','primo','prima','hijo','hija','tio','tia','sobrino','sobrina','pariente','boda','cumpleaños'],
+    salud: ['salud','medico','enfermo','enferma','dolor','gripe','pastilla','hospital','clinica','farmacia','medicina','receta','vacuna','fiebre','tos','alergia','dieta','veterinario'],
+    clima: ['clima','llover','sol','frio','calor','nieve','nublado','nube','viento','tormenta','grados','temperatura','verano','invierno','primavera','otono'],
+    animales: ['animal','animales','perro','gato','cachorro','conejo','pajaro','pez','tortuga','serpiente','raton','caballo','vaca','cerdo','oveja','gallina','abeja','mosca','mariposa','caracol','mascota','granja','zoo'],
+    casa: ['casa','piso','habitacion','cocina','baño','salon','dormitorio','cama','sofa','armario','nevera','lavadora','vecino','alquiler','mudanza','muebles'],
+    transporte: ['coche','moto','bici','autobus','metro','tren','taxi','avion','conducir','manejar','carnet','motor','gasolina','aparcar','atasco','trafico','carretera','accidente','multa'],
+    ropa: ['ropa','camiseta','camisa','jersey','pantalon','vaqueros','falda','vestido','zapatos','zapatillas','botas','gorra','bufanda','bolso','gafas','reloj','moda','talla'],
+    cuerpo: ['cuerpo','cabeza','pelo','cara','ojo','nariz','boca','diente','oreja','cuello','brazo','mano','dedo','pecho','espalda','barriga','pierna','rodilla','pie','piel','hueso','sangre','corazon']
+};
 
-        function esPregunta(text) {
-            const t = text.trim();
-            if (t.endsWith('?')) return true;
-            const n = normalize(t);
-            return /^(que|quien|quienes|como|cuando|donde|cual|cuales|cuanto|cuanta|cuantos|cuantas|por que|para que)\b/.test(n);
+const RESPUESTAS = {
+    trabajo: ['Uf, el trabajo... a veces es un caos. Yo estoy en marketing digital y hay días de locos. ¿Y tú en qué andas?','Suena a que tienes lío con el curro. Cuéntame más, ¿es algo puntual o siempre es así?','El trabajo nos come a veces. Yo intento desconectar cuando salgo.'],
+    tecnologia: ['Ostras, qué interesante. La tecnología avanza rapidísimo. ¿Llevas mucho con eso?','Me flipa que sepas de eso. Yo soy más de letras, la verdad. Cuéntame más.','La verdad es que la tecnología cambia todo cada día.'],
+    estudios: ['Ay, estudiar... yo ya lo dejé pero a veces pienso en hacer algún curso. ¿Y tú qué estudias?','Qué bien que sigas estudiando, con lo que cuesta ponerse.'],
+    sentimientos_mal: ['Vaya, lo siento de verdad. ¿Quieres contarme qué te pasa?','Uf, te entiendo. Hay días que todo pesa más. ¿Tú qué haces para desconectar?','Lo siento mucho. Aquí estoy para escucharte. ¿Qué ha pasado?'],
+    sentimientos_bien: ['¡Qué bien! Me alegro un montón. ¿Y qué ha pasado?','¡Genial! Cuéntame, cuéntame.','¡Me encanta oír eso! A ver, dime qué te tiene así.'],
+    amor: ['Ay, el amor... tema complicado. Yo ahora estoy soltera y tampoco me agobia. ¿Y tú qué tal?','Uf, eso es un mundo. ¿Cómo va la cosa?','Qué bonito. Yo estoy centrada en mí, pero me alegro por ti.'],
+    sexo: ['Es un tema íntimo y natural, la verdad. Yo lo llevo con normalidad. ¿Algo concreto?','Pues cada uno lo vive a su manera. Yo prefiero hablarlo cuando hay confianza.','Es parte de la vida, sin más. Si quieres contarme algo, adelante.'],
+    amistad: ['Los amigos son lo mejor. Yo tengo un grupo de toda la vida. ¿Y tú?','Qué bien. A esta edad cuesta más quedar con todos, cada uno va a su ritmo.'],
+    musica: ['¡Uy, la música es mi salvación! Yo escucho mucho indie y algo de pop. ¿Tú qué escuchas?','Me encanta la música. Pásame alguna recomendación si quieres.'],
+    cine: ['Estoy enganchada a una serie de misterio. Para pelis me tira el cine independiente. ¿Recomendaciones?','Me gusta mucho el cine, aunque últimamente veo más series.'],
+    comida: ['¡Ay, la comida! A mí me pierde la pasta. Y el sushi tampoco lo rechazo.','Yo cocino regular, pero me gusta. Cuando salgo a cenar lo disfruto más.'],
+    deporte: ['Yo voy al gimnasio tres veces por semana, aunque a veces me da pereza.','Uf, el deporte. Me cuesta ponerme pero cuando lo hago me siento genial.','Qué bien. Yo he hecho alguna ruta de senderismo y me flipa.'],
+    viajes: ['Me encantaría viajar más. Tengo pendiente Japón. ¿Tú has viajado mucho?','Ay, viajar es lo mejor. El año pasado estuve de escapada y me quedé con ganas.','La playa me relaja muchísimo. Darme un baño y tumbarme al sol, no necesito más.'],
+    dinero: ['Ya... está todo complicado. Nos toca aguantar y apañarnos.','Uf, no me hables del dinero. El alquiler está imposible.'],
+    familia: ['La familia es la familia... A veces un lío, pero ahí están. ¿Tú te llevas bien con los tuyos?','Yo con mis padres me llevo bien, aunque a veces no me entiendan. Cosas de la edad.'],
+    salud: ['Uf, cuídate. Yo intento hacer vida sana aunque a veces me salto la dieta.','Ponte bien, ¿eh? La salud es lo primero.'],
+    clima: ['Ay, el tiempo está loco. Ya no sé ni qué ropa ponerme.','Pues aquí hace un día raro. ¿Y por tu zona qué tal?'],
+    animales: ['Ay, los animales me encantan. No puedo tener mascota porque vivo de alquiler, pero me derrito con los gatos.','Uf, qué mono. ¿Tú tienes alguno?'],
+    casa: ['El tema casa... yo comparto piso con una amiga y el alquiler está imposible. ¿Tú vives solo o acompañado?','Qué bien. Yo sueño con tener algún día un sitio mío.'],
+    transporte: ['Yo casi siempre voy en metro, es lo que menos tarda. ¿Tú conduces?','Uf, el tráfico a veces es un caos.'],
+    ropa: ['Ay, la ropa es mi perdición. Me compraría todo.','Yo ahora intento comprar menos y mejor, pero es difícil.'],
+    cuerpo: ['Ay, el cuerpo... a esta edad ya empiezan las cositas.','Yo tengo la espalda fatal de estar sentada todo el día. ¿Tú haces algo?']
+};
+
+// ---------- ANÁLISIS ----------
+const STOPWORDS = new Set(['que','de','la','el','los','las','un','una','y','o','es','son','con','por','para','en','a','se','su','mi','tu','lo','me','te','no','muy','mas','como','cuando','donde','porque','tambien','solo','hay','tiene','hacer','ser','estar','quiero','puedo','algo','todo','nada','esto','eso','quieres','quiere','cuente','cuenta','dime','dices','decir','sabes','sabe','puedes','puede','haces','hace','tienes','tengo','estas','esta','estoy','vas','vamos','digo','dice','creo','crees','pienso','piensas','aunque','sino','tal','cual','quien','fue','era','han','has','hemos','tenia','tenias','hacia','hacia','hizo','hice','visto','hecho','dicho','puesto']);
+
+function esConocida(p) {
+    p = normalize(p);
+    if (VOCAB_SET.has(p)) return true;
+    for (var tema in TEMAS) {
+        for (var i = 0; i < TEMAS[tema].length; i++) {
+            if (normalize(TEMAS[tema][i]) === p) return true;
         }
+    }
+    return false;
+}
 
-        // ---- VOCABULARIO BASE ----
-        const VOCABULARIO_BASE = [
-            'casa','piso','habitacion','cocina','bano','salon','dormitorio','cama','mesa','silla','sofa','puerta','ventana','pared','suelo','techo','luz','lampara','espejo','armario','nevera','horno','microondas','lavadora','plancha','escoba','basura','llave','timbre','telefono','tele','televisor','radio','cuarto','pasillo','balcon','terraza','jardin','garaje','ascensor','escalera','planta','edificio','vecino','vecina','alquiler','hipoteca','mudanza','mueble','muebles','colchon','sabana','manta','almohada','cortina','alfombra','cuadro','maceta','enchufe','cable','bombilla','grifo','ducha','banera','retrete','lavabo','cepillo','pasta','jabon','champu','toalla','papel',
-            'comida','comer','cena','cenar','almuerzo','almorzar','desayuno','desayunar','merienda','merendar','pan','leche','cafe','te','agua','vino','cerveza','refresco','zumo','cocacola','pizza','pasta','arroz','sopa','ensalada','carne','pollo','pescado','ternera','cerdo','huevo','huevos','queso','jamon','embutido','fruta','manzana','platano','naranja','pera','uva','fresa','sandia','melon','verdura','tomate','cebolla','ajo','patata','patatas','zanahoria','lechuga','aceite','sal','azucar','vinagre','salsa','postre','tarta','helado','chocolate','galleta','galletas','bollo','churro','churros','bocadillo','sandwich','tortilla','croqueta','croquetas','paella','cocido','guiso','sushi','hamburguesa','perrito','restaurante','bar','cafeteria','cocinar','cocina','guisar','freir','asar','hervir','cortar','pelar','limpiar','cfregar','despensa','supermercado','mercadouch','panaderia','carniceria','pescaderia','illofruteria','receta','ingrediente','plato','vaso','taza','copa','botella','servilleta','tenedor','','cuchara','cazo','sarten','olla','bandeja','mantel',
-            'ropa','camiseta','camisa','blusa','jersey','sudadera','chaqueta','abrigo','cazadora','pantalon','vaqueros','falda','vestido','short','calcetines','medias','interior','sujetador','braga','calzoncillo','zapatos','zapatillas','botas','sandalias','tacones','gorra','sombrero','bufanda','guantes','cinturon','bolso','mochila','cartera','gafas','reloj','collar','pulsera','pendientes','anillo','joyas','tienda','compras','comprar','vender','precio','oferta','rebajas','descuento','tarjeta','efectivo','caja','cajero','factura','ticket','dependiente','probador','talla','color','moda','marca','barato','caro','gratis',
-            'cuerpo','cabeza','pelo','cara','frente','ceja','cejas','ojo','ojos','nariz','boca','labio','labios','diente','dientes','lengua','oreja','orejas','cuello','hombro','brazo','codo','mano','dedo','dedos','una','unas','pecho','espalda','barriga','tripa','cintura','cadera','pierna','rodilla','pie','pies','piel','hueso','musculo','sangre','corazon','pulmon','estomago','cerebro','salud','medico','medica','enfermero','enfermera','hospital','clinica','consulta','farmacia','pastilla','pastillas','medicina','receta','analisis','vacuna','inyeccion','dolor','fiebre','gripe','resfriado','tos','mocos','alergia','herida','golpe','quemadura','enfermo','enferma','dormir','descansar','dieta','gimnasio','ejercicio','deporte','correr','andar','caminar','nadar','bailar','yoga','pesas','estiramiento','masaje','fisio',
-            'sexo','sexual','sexualidad','relaciones','relacion','deseo','desear','placer','intimo','intimidad','desnudo','desnuda','desnudos','desnudas','preservativo','condon','anticonceptivo','pildora','erotico','erotica','virginidad','masturbacion','masturbar','orgasmo','excitado','excitada','excitacion','atraccion','atraer','besar','beso','besos','caricia','caricias','abrazo','abrazar','acostarse','dormir juntos','tener relaciones','hacer el amor',
-            'coche','auto','moto','motocicleta','scooter','ciclomotor','bici','bicicleta','patinete','autobus','bus','metro','tren','cercanias','ave','taxi','uber','cabify','vuelo','avion','barco','ferry','transporte','conducir','manejar','pilotar','montar','carnet','matricula','rueda','ruedas','motor','gasolina','diesel','electrico','gasolinera','aparcar','aparcamiento','parking','atasco','trafico','carretera','autopista','semaforo','multa','accidente','viaje','viajar','destino','maleta','equipaje','billete','anden','estacion','parada','horario','retraso','llegar','salir','volver','marcharse','quedarse','llevar','traer','ir','venir',
-            'animal','animales','perro','perra','gato','gata','cachorro','cachorra','conejo','hamster','pajaro','pajaros','loro','canario','pez','peces','tortuga','serpiente','lagarto','raton','rata','caballo','vaca','toro','cerdo','oveja','cabra','gallina','gallo','pato','pollo','abeja','mosca','mosquito','arana','hormiga','mariposa','caracol','caracoles','insecto','bicho','mascota','veterinario','granja','zoo','selva','bosque','campo','mar','playa','rio','montana','monte','valle','desierto','isla','paisaje','naturaleza','flor','flores','arbol','arboles','hoja','hojas','planta','plantas','semilla','raiz','tierra','piedra','arena',
-            'banar','banarse','banador','banadora','banadores','banando','banado','nadar','nadando','nadado','bucear','buceo','snorkel','ola','olas','orilla','flotar','flotador','crema','solar','bronceador','sombrilla','hamaca','sombra','piscina','chapotear','zambullir','zambullida','tumbona','salitre','espuma','marea','costa','litoral','puerto','acantilado',
-            'escalada','escalar','escalador','escaladora','escaladores','roca','rocas','montanismo','montanero','montanera','rapel','cuerda','arnes','casco','piolet','crampones','altura','cumbre','cima','risco','precipicio','barranco','barranquismo','senderismo','excursion','ruta','caminata','trekking','refugio','vivac','acampada','camping','brujula','mapa','linterna','mochila',
-            'rojo','azul','verde','amarillo','naranja','morado','violeta','rosa','marron','gris','negro','blanco','beige','turquesa','dorado','plateado','claro','oscuro','color','colores',
-            'tiempo','clima','dia','dias','noche','noches','manana','tarde','tardes','semana','semanas','mes','meses','ano','anos','hora','horas','minuto','minutos','segundo','segundos','momas','sobrento','rato','lunesino','martes','miercoles','jueves','','viernes','sabado','domingo','finde','findes','enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre','primavera','verano','otono','invierno','sol','luna','estrella','estrellas','cielo','nube','nubes','lluvia','llover','nieve','nevar','viento','tormenta','trueno','rayo','niebla','calor','frio','fresco','humedo','seco','grados','temperatura','pronostico',
-            'feliz','contento','contenta','alegre','triste','tristeza','pena','llorar','lloro','lagrima','lagrimas','enfadado','enfadada','enfadar','cabreado','cabreada','rabia','ira','nervioso','nerviosa','nervios','ansioso','ansiosa','ansiedad','preocupado','preocupada','preocupacion','miedo','asustado','asustada','susto','sorpresa','sorprendido','sorprendida','aburrido','aburrida','aburrimiento','cansancio','estresado','estresada','estres','deprimido','deprimida','depresion','animado','animada','ilusion','ilusionado','ilusionada','emocion','emocionado','emocionada','calma','tranquilo','tranquila','relajado','relajada','agobiado','agobiada','agobio','harto','harta','orgulloso','orgullosa','celoso','celosa','verguenza','timido','timida','extrovertido','extrovertida','solo','sola','acompanado','acompanada',
-            'madre','padre','mama','papa','hermano','hermana','hermanos','hermanas','hijo','hija','hijos','hijas','abuelo','abuela','abuelos','abuelas','nieto','nieta','tio','tia','tios','tias','primo','prima','primos','primsobrina','suegro','suegra','cunado','cunada','marido','esposo','esposa','pareja','novio','novia','amigo','amiga','amigos','amigas','colega','colegas','companero','companera','companeros','companeras','conocido','conocida','jefe','jefa','senor','senora','chico','chica','chaval','chavala','nino','nina','bebe','adulto','adulta','joven','mayor','anciano','anciana','familia','familiares','pariente','parientes',
-            'trabajo','trabajar','curro','currar','empleo','empleado','empleada','empresa','oficina','reunion','proyecto','tarea','tareas','cliente','clientes','contrato','nomina','sueldo','salario','pagas','paro','despido','entrevista','curriculum','puesto','cargo','horario','turno','extra','vacaciones','baja','jubilacion','pension','dinero','pasta','plata','euros','moneda','monedas','billete','billetes','banco','cuenta','ahorro','ahorros','deuda','deudas','prestamo','credito','facturas','recibo','recibos','impuesto','impuestos','hacienda','seguridad','social','inversion','invertir','gastar','gasto','gastos','pagar','cobrar','ingresar','sacar','prestar','deber','debe','rico','rica','pobre','crisis','economia','negocio','autonomo','autonoma','funcionario','funcionaria',
-            'colegio','instituto','universidad','facultad','escuela','clase','clases','aula','profesor','profesora','alumno','alumna','estudiante','estudiar','estudio','estudios','carrera','grado','master','doctorado','curso','cursos','asignatura','asignaturas','examen','examenes','nota','notas','suspenso','aprobado','matricula','beca','becas','apuntes','libro','libros','cuaderno','boli','lapiz','goma','regla','deberes','tarea','pizarra','recreo','patio','biblioteca','leer','escribir','memorizar','repasar','entender','comprender','explicar','preguntar','responder','duda','dudas','aprender','ensenar','titulo','diploma',
-            'movil','telefono','smartphone','tablet','ordenador','portatil','pantalla','teclado','raton','altavoz','auriculares','cargador','bateria','usb','wifi','internet','red','web','pagina','app','aplicacion','programa','software','archivo','carpeta','foto','fotos','video','videos','camara','mensaje','mensajes','whatsapp','telegram','instagram','facebook','tiktok','twitter','youtube','spotify','netflix','correo','email','clave','contrasena','usuario','perfil','descargar','subir','instalar','actualizar','conectar','apagar','encender','juego','juegos','videojuego','consola','playstation','nintendo','xbox','mandos',
-            'musica','cancion','canciones','grupo','banda','concierto','festival','disco','album','cantante','musico','escuchar','bailar','baile','discoteca','fiesta','fiestas','cumpleanos','cumple','boda','bautizo','comunion','celebracion','invitado','invitada','regalo','regalos','pelicula','peli','pelis','cine','serie','series','temporada','capitulo','actor','actriz','director','teatro','obra','novela','cuento','poesia','comic','revista','periodico','noticia','noticias','pintar','dibujar','manualidad','fotografia','museo','exposicion','parque','piscina','futbol','baloncesto','tenis','padel','natacion','atletismo','aventura',
-            'bueno','buena','malo','mala','grande','pequeno','pequena','nuevo','nueva','viejo','vieja','guapo','guapa','feo','fea','alto','alta','bajo','baja','gordo','gorda','flaco','flaca','delgado','delgada','rapido','rapida','lento','lenta','facil','dificil','barata','limpio','limpia','sucio','sucia','caliente','fria','dulce','salado','amargo','acido','raro','rara','normal','comun','especial','importante','interesante','divertido','gracioso','serio','tonto','tonta','listo','lista','inteligente','simpatico','simpatica','antipatico','antipatica','majo','maja','borde','pesado','pesada','igual','distinto','diferente','parecido','primero','ultimo','siguiente','anterior','bastante','demasiado','suficiente','alguien','nadie','ninguno','ninguna','cualquiera','varios','varias','alguno','alguna','otro','otra','mismo','misma','propio','propia','unico','unica','proximo','proxima','actual','presente',
-            'vale','venga','oye','oiga','pues','hombre','mujer','tio','tia','chaval','chavala','colega','tronco','tronca','flipar','flipo','flipas','molar','mola','molas','molan','guay','chulo','chula','rollo','movida','movidas','liarse','lio','lian','quedar','quedamos','quedada','quedadas','plan','planes','birra','birras','cana','canas','tapeo','tapas','cenita','comilon','chuleton','barbacoa','planazo','planazos','mogollon','monton','mil','millon','millones','flipante','brutal','increible','alucinante','genial','perfecto','estupendo','maravilloso','horrible','fatal','lastima','ojala','vaya','anda','en serio','de verdad','que va','que fuerte','que locura','que pasada','que guay','que rollo','que palo','palo','cutre','chungo','chunga'
-        ];
-        const VOCAB_SET = new Set(VOCABULARIO_BASE.map(normalize));
+function esPregunta(text) {
+    var t = text.trim();
+    if (t.endsWith('?')) return true;
+    var n = normalize(t);
+    return /^(que|quien|quienes|como|cuando|donde|cual|cuales|cuanto|cuanta|cuantos|cuantas|por que|para que)\b/.test(n);
+}
 
-        // ---- TEMAS ----
-        const TEMAS = {
-            trabajo: ['trabajo','curro','currar','jefe','jefa','oficina','empresa','reunion','proyecto','cliente','empleo','contrato','sueldo','nomina','turno','companero','companera','despido','entrevista','curriculum','hacienda','autonomo','autonoma','funcionario','funcionaria'],
-            tecnologia: ['inteligencia artificial','ia','programar','codigo','app','aplicacion','ordenador','movil','software','hardware','internet','web','algoritmo','datos','tecnologia','chatgpt','gemini','wifi','red','pantalla','teclado','bateria','cargador','auriculares','whatsapp','instagram','facebook','tiktok','youtube','spotify','netflix','email','correo','usuario','contrasena','descargar','instalar','actualizar','consola','videojuego'],
-            estudios: ['estudiar','estudio','carrera','universidad','grado','master','curso','examen','clase','profesor','profesora','apuntes','tesis','colegio','instituto','facultad','escuela','alumno','alumna','estudiante','asignatura','nota','notas','suspenso','aprobado','beca','deberes','biblioteca','leer','escribir','memorizar','repasar','titulo','diploma'],
-            sentimientos_mal: ['triste','tristeza','cansado','cansada','agotado','agotada','frustrado','frustrada','estresado','estresada','estres','hundido','hundida','preocupado','preocupada','ansioso','ansiosa','ansiedad','deprimido','deprimida','depresion','agobiado','agobiada','agobio','harto','harta','enfadado','enfadada','cabreado','cabreada','rabia','ira','nervioso','nerviosa','nervios','miedo','asustado','asustada','susto','aburrido','aburrida','aburrimiento','llorar','lloro','pena','lagrima','lagrimas'],
-            sentimientos_bien: ['feliz','contento','contenta','alegre','animado','animada','ilusionado','ilusionada','ilusion','emocionado','emocionada','emocion','orgulloso','orgullosa','tranquilo','tranquila','relajado','relajada','calma'],
-            amor: ['novio','novia','pareja','amor','enamorado','enamorada','cita','ligar','corazon','romantico','romantica','marido','esposo','esposa','celoso','celosa','boda','anillo','compromiso','infidelidad','cuernos','caricias','abrazar','abrazo'],
-            sexo: ['sexo','sexual','sexualidad','relaciones','relacion','deseo','desear','placer','intimo','intimidad','desnudo','desnuda','preservativo','condon','anticonceptivo','pildora','erotico','erotica','virginidad','masturbacion','masturbar','orgasmo','excitado','excitada','excitacion','atraccion','acostarse','hacer el amor','tener relaciones'],
-            amistad: ['amigo','amiga','amigos','amigas','colegas','quedar','quedada','quedadas','birra','birras','cana','canas','cenita'],
-            musica: ['musica','cancion','canciones','grupo','banda','concierto','festival','spotify','cantante','album','rock','pop','indie','reggaeton','disco','musico','bailar','baile','discoteca'],
-            cine: ['pelicula','peli','pelis','serie','series','netflix','hbo','cine','capitulo','temporada','documental','actor','actriz','director','teatro','obra'],
-            comida: ['comida','comer','cena','cenar','almuerzo','almorzar','desayuno','desayunar','merienda','pizza','sushi','cocinar','restaurante','cafe','cerveza','vino','tortilla','paella','croqueta','croquetas','tapas','tapeo','barbacoa','chuleton','hamburguesa','helado','tarta','chocolate','bocadillo','churros','receta','ingrediente'],
-            deporte: ['deporte','gym','gimnasio','correr','caminar','bici','yoga','pilates','entrenar','ejercicio','futbol','baloncesto','tenis','padel','natacion','atletismo','senderismo','excursion','pesas','estiramiento','sudar','marcar','abdominales','escalada','escalar','escalador','escaladora','escaladores','roca','rocas','montanismo','montanero','rapel','barranquismo','trekking','acampada','camping','cuerda','arnes','casco','piolet','crampones','cumbre','cima'],
-            viajes: ['viaje','viajar','vacaciones','destino','playa','montana','monte','hotel','vuelo','avion','pais','ciudad','maleta','equipaje','billete','anden','estacion','hostal','airbnb','camping','aventura','museo','exposicion','turismo','turista','banar','banarse','banador','banadores','nadar','nadando','bucear','buceo','snorkel','ola','olas','orilla','piscina','costa','litoral','puerto','acantilado','marea'],
-            dinero: ['dinero','pasta','crisis','paro','alquiler','hipoteca','precio','caro','economia','pagar','deuda','sueldo','salario','nomina','banco','cuenta','ahorro','ahorros','prestamo','credito','factura','facturas','impuesto','impuestos','hacienda','gastar','gasto','gastos','cobrar','ingresar','pobre','rico','euros'],
-            futuro: ['futuro','manana','proximo','planear','sueno','meta','objetivo','quiero ser','algun dia','planes','proyecto','esperanza','suenos'],
-            familia: ['familia','madre','padre','mama','papa','hermano','hermana','abuelo','abuela','primo','prima','hijo','hija','tio','tia','sobrino','sobrina','suegro','suegra','cunado','cunada','pariente','parientes','boda','bautizo','comunion','cumpleanos','cumple'],
-            salud: ['salud','medico','medica','enfermo','enferma','dolor','cabeza','gripe','pastilla','pastillas','hospital','clinica','consulta','farmacia','medicina','receta','analisis','vacuna','inyeccion','fiebre','resfriado','tos','alergia','herida','golpe','dieta','veterinario'],
-            clima: ['clima','llueve','llover','sol','frio','calor','nieve','nevar','nublado','nube','nubes','viento','tormenta','trueno','rayo','niebla','grados','temperatura','pronostico','primavera','verano','otono','invierno'],
-            humor: ['chiste','risa','reir','gracioso','broma','jaja','divertido','flipar','flipo','flipas','molar','mola','guay','chulo','brutal','increible','alucinante','planazo','mogollon','monton'],
-            animales: ['animal','animales','perro','perra','gato','gata','cachorro','conejo','hamster','pajaro','loro','canario','pez','peces','tortuga','serpiente','lagarto','raton','rata','caballo','vaca','toro','cerdo','oveja','cabra','gallina','gallo','pato','abeja','mosca','mosquito','arana','hormiga','mariposa','caracol','caracoles','insecto','bicho','mascota','granja','zoo'],
-            casa: ['casa','piso','habitacion','cocina','bano','salon','dormitorio','cama','mesa','silla','sofa','puerta','ventana','pared','suelo','techo','lampara','espejo','armario','nevera','horno','microondas','lavadora','basura','llave','timbre','cuarto','pasillo','balcon','terraza','jardin','garaje','ascensor','escalera','vecino','vecina','mudanza','muebles','colchon','sabana','manta','almohada','cortina','alfombra','cuadro','maceta','enchufe','bombilla','grifo','ducha','banera','retrete','lavabo','toalla'],
-            transporte: ['coche','moto','motocicleta','scooter','ciclomotor','bici','bicicleta','patinete','autobus','bus','metro','tren','cercanias','ave','taxi','uber','cabify','avion','barco','ferry','conducir','manejar','pilotar','carnet','rueda','ruedas','motor','gasolina','diesel','electrico','gasolinera','aparcar','aparcamiento','parking','atasco','trafico','carretera','autopista','semaforo','multa','accidente','estacion','parada','horario','retraso'],
-            ropa: ['ropa','camiseta','camisa','blusa','jersey','sudadera','chaqueta','abrigo','cazadora','pantalon','vaqueros','falda','vestido','short','calcetines','medias','zapatos','zapatillas','botas','sandalias','tacones','gorra','sombrero','bufanda','guantes','cinturon','bolso','mochila','cartera','gafas','reloj','collar','pulsera','pendientes','anillo','joyas','moda','marca','talla','probador'],
-            compras: ['compras','comprar','vender','precio','oferta','rebajas','descuento','tarjeta','efectivo','caja','cajero','factura','ticket','dependiente','tienda','supermercado','mercado','panaderia','carniceria','fruteria','escaparate','regalo','regalos'],
-            cuerpo: ['cuerpo','cabeza','pelo','cara','frente','ceja','cejas','ojo','ojos','nariz','boca','labio','labios','diente','dientes','lengua','oreja','orejas','cuello','hombro','brazo','codo','mano','dedo','dedos','una','unas','pecho','espalda','barriga','tripa','cintura','cadera','pierna','rodilla','pie','pies','piel','hueso','musculo','sangre','corazon','pulmon','estomago','cerebro']
-        };
+function palabrasDesconocidas(texto) {
+    var palabras = normalize(texto).replace(/[^\w\s]/g, '').split(/\s+/);
+    var out = [];
+    for (var i = 0; i < palabras.length; i++) {
+        var w = palabras[i];
+        if (w.length >= 4 && !STOPWORDS.has(w) && !esConocida(w)) out.push(w);
+    }
+    return out;
+}
 
-        function esConocida(palabra) {
-            const p = normalize(palabra);
-            if (VOCAB_SET.has(p)) return true;
-            for (const tema in TEMAS) {
-                for (const t of TEMAS[tema]) {
-                    if (normalize(t) === p) return true;
-                }
+function detectarTemas(proc) {
+    var detectados = [];
+    for (var tema in TEMAS) {
+        for (var i = 0; i < TEMAS[tema].length; i++) {
+            if (proc.indexOf(normalize(TEMAS[tema][i])) !== -1) {
+                if (detectados.indexOf(tema) === -1) detectados.push(tema);
+                break;
             }
-            return false;
         }
+    }
+    return detectados;
+}
 
-        function extractKeyword(text) {
-            const words = normalize(text).replace(/[^\w\s]/g, '').split(/\s+/)
-                .filter(w => w.length >= 5 && !STOPWORDS.includes(w));
-            if (!words.length) return null;
-            words.sort((a, b) => b.length - a.length);
-            return words[0];
+// ---------- APRENDIZAJE ----------
+function extraerEnseñanza(raw) {
+    var m = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(.+?)\s+(?:es|son|significa|se llama)\s+(.+)/i);
+    if (m && m[1] && m[2]) return { q: normalize(m[1]), a: m[2].trim() };
+    return null;
+}
+
+function pedirExplicacion(keyword) {
+    esperandoExplicacion = { keyword: keyword };
+    return pickRandom([
+        'Uy, eso no lo pillo. ¿Me lo explicas? Que quiero aprender.',
+        'Mmm, no sé qué es eso. Explícamelo, por favor.',
+        'No conozco eso. ¿Me lo cuentas? Me encanta aprender cosas nuevas.',
+        'Me pillas, no sé de qué me hablas. ¿Me lo explicas?'
+    ]);
+}
+
+// ---------- GENERADOR PRINCIPAL ----------
+function generateResponse(raw) {
+    // 0. Si estamos esperando una explicación
+    if (esperandoExplicacion) {
+        var numPalabras = normalize(raw).split(/\s+/).length;
+        var esNo = /^(no se|ni idea|no lo se|paso|nada)\b/i.test(normalize(raw));
+        if (numPalabras >= 3 && !esNo) {
+            var ck = getMemory('custom_knowledge') || {};
+            ck[esperandoExplicacion.keyword] = raw;
+            setMemory('custom_knowledge', ck);
+            esperandoExplicacion = null;
+            return pickRandom([
+                '¡Ah, ahora sí! Me lo apunto. Gracias por explicármelo.',
+                '¡Uy, qué interesante! Ya lo tengo guardado. Gracias.',
+                '¡Vale, ya lo pillo! Apuntado.'
+            ]);
         }
+        esperandoExplicacion = null;
+    }
 
-        // ---- PUNTUACIÓN DE TEMAS ----
-        // Cada tema recibe puntos: palabras normales 1, palabras ambiguas 0,5.
-        function puntuarTemas(proc) {
-            const puntuaciones = {};
-            for (let tema in TEMAS) {
-                let puntos = 0;
-                for (let palabra of TEMAS[tema]) {
-                    const p = normalize(palabra);
-                    if (proc.includes(p)) {
-                        puntos += PALABRAS_AMBIGUAS.has(p) ? 0.5 : 1;
-                    }
-                }
-                if (puntos > 0) puntuaciones[tema] = puntos;
-            }
-            return puntuaciones;
-        }
+    var proc = normalize(raw);
+    var palabras = proc.split(/\s+/);
 
-        // ---- RESPUESTAS POR TEMA ----
-        const RESPUESTAS = {
-            trabajo: [
-                'Uf, el trabajo... a veces es un poco caos, ¿no? Yo estoy en marketing digital y hay días de locos. ¿Y tú en qué andas?',
-                'Suena a que tienes lío con el curro. Cuéntame más, ¿es algo puntual o siempre es así?',
-                'El trabajo nos come a veces. Yo intento desconectar cuando salgo, aunque no siempre lo consigo.'
-            ],
-            tecnologia: [
-                'Ostras, qué interesante. La inteligencia artificial está cambiando todo, ¿no? Yo la uso un poco en el trabajo pero me pierdo con la parte técnica.',
-                'Me flipa que sepas de eso. Yo soy más de letras, la verdad. ¿Y llevas mucho tiempo con el proyecto?',
-                'La verdad es que la tecnología avanza rapidísimo. Yo me quedo alucinada con lo que se puede hacer ahora.'
-            ],
-            estudios: [
-                'Ay, estudiar... yo ya lo dejé pero a veces pienso en hacer algún curso. ¿Y tú qué estás estudiando?',
-                'Qué bien que sigas estudiando, con lo que cuesta ponerse. ¿Se te da bien o hay alguna asignatura que se te atraganta?'
-            ],
-            sentimientos_mal: [
-                'Vaya, lo siento de verdad. ¿Quieres contarme qué te pasa? A veces hablarlo, aunque sea con alguien que no conoces, ayuda.',
-                'Uf, te entiendo. Hay días que todo pesa más. Yo lo que hago es ponerme música y salir a andar un rato. ¿Tú qué sueles hacer?',
-                'Lo siento mucho. Si te sirve de algo, aquí estoy para escucharte. ¿Qué ha pasado?'
-            ],
-            sentimientos_bien: [
-                '¡Qué bien! Me alegro un montón. ¿Y qué ha pasado, si se puede saber?',
-                '¡Genial! Se nota que estás contento. Cuéntame, cuéntame.',
-                '¡Me encanta oír eso! A ver, dime qué te tiene así de contento.'
-            ],
-            amor: [
-                'Ay, el amor... tema complicado. Yo ahora mismo estoy soltera y tampoco me agobia, la verdad. ¿Y tú qué tal?',
-                'Uf, eso es un mundo. ¿Y cómo va la cosa, bien o complicado?',
-                'Qué bonito. Yo estoy en un momento de centrarme en mí, pero me alegro por ti.'
- r            ],
-            sexo: [
-                'Es un tema íntimo y natural, la verdad. Yo lo llevo con normalidad, aunque tampoco es algo que saque así de primeras. ¿Algo concreto que quieras contar?',
-                'Pues es un tema de adultos, y cada uno lo vive a su manera. Yo prefiero hablarlo cuando hay confianza, la verdad.',
-                'Es parte de la vida, sin más. Yo no soy de entrar en detalles por aquí, pero si quieres contarme algo, adelante.'
-            ],
-            amistad: [
-                'Los amigos son lo mejor, la verdad. Yo tengo un grupo de toda la vida y luego los del trabajo. ¿Y tú?',
-                'Qué bien. Yo creo que a esta edad cuesta más quedar con todos, cada uno va a su ritmo.'
-            ],
-            musica: [
-                '¡Uy, la música es mi salvación! Yo escucho mucho indie y algo de pop. Depende del día. ¿Tú qué escuchas?',
-                'Me encanta la música, la verdad. Pásame alguna recomendación si quieres, que siempre me gusta descubrir cosas nuevas.'
-            ],
-            cine: [
-                'Uf, estoy enganchada a una serie de misterio. Y para pelis me tira mucho el cine independiente. ¿Tienes alguna recomendación?',
-                'A mí me gusta mucho el cine, aunque reconozco que últimamente veo más series. Es más cómodo.'
-            ],
-            comida: [
-                '¡Ay, la comida! A mí me pierde la pasta, te lo digo en serio. Y el sushi tampoco lo rechazo.',
-                'Yo cocino regular, pero me gusta. Aunque cuando salgo a cenar me lo disfruto más.'
-            ],
-            deporte: [
-                'Yo voy al gimnasio tres veces por semana, aunque a veces me da una pereza... Pero luego se agradece.',
-                'Uf, el deporte. A mí me cuesta ponerme pero cuando lo hago me siento genial.',
-                'Ostras, qué bien. Yo he hecho algunauta de senderismo y me flipa. ¿Y escalada has probado?'
-            ],
-            viajes: [
-                'Me encantaría viajar más. Tengo pendiente Japón y algún país del norte de Europa. ¿Tú has viajado mucho?',
-                'Ay, viajar es lo mejor. Yo el año pasado estuve de escapada y me quedé con ganas de más.',
-                'Uf, la playa me relaja muchísimo. Darme un baño y tumbarme al sol, no necesito más.'
-            ],
-            dinero: [
-                'Ya... está todo complicado, la verdad. Nos toca aguantar y apañarnos como podemos.',
-                'Uf, no me hables del dinero. El alquiler está imposible, sobre todo en las ciudades.'
-            ],
-            futuro: [
-                'Me gusta pensar en el futuro, aunque a veces me agobia un poco. ¿Tú tienes claro lo que quieres?',
-                'Yo tengo algunas metas pero voy despacio, sin prisa. ¿Y tú qué planes tienes?'
-            ],
-            familia: [
-                'La familia es la familia... A veces un lío, pero ahí están. ¿Tú te llevas bien con los tuyos?',
-                'Yo con mis padres me llevo bien, aunque a veces no me entiendan del todo. Cosas de la edad.'
-            ],
-            salud: [
-                'Uf, cuídate. Yo intento hacer vida sana aunque a veces me salto la dieta. ¿Estás mejor?',
-                'Ponte bien, ¿eh? La salud es lo primero.'
-            ],
-            clima: [
-                'Ay, el tiempo está loco. Yo ya no sé ni qué ropa ponerme.',
-                'Pues aquí hace un día raro, la verdad. ¿Y por tu zona qué tal?'
-            ],
-            humor: [
-                '¡Jajaja! Qué bueno. Me encanta que tengas ese rollo.',
-                '¡Jajaja! Ay, me has sacado una sonrisa.'
-            ],
-            animales: [
-                'Ay, los animales me encantan. Yo no puedo tener mascota porque vivo de alquiler, pero me derrito con los gatos.',
-                'Uf, qué mono. ¿Tú tienes alguno en casa o te gustan más de lejos?'
-            ],
-            casa: [
-                'Uf, el tema casa... yo comparto piso con una amiga y el alquiler está imposible. ¿Tú vives solo o acompañado?',
-                'Qué bien. Yo sueño con tener algún día un sitio mío, aunque sea pequeñito.'
-            ],
-            transporte: [
-                'Yo casi siempre voy en metro, es lo que menos tarda por Madrid. ¿Tú conduces?',
-                'Uf, el tráfico a veces es un caos. Menos mal que hay días que voy andando y me despejo.'
-            ],
-            ropa: [
-                'Ay, la ropa es mi perdición. Me compraría todo, aunque luego siempre me pongo lo mismo.',
-                'Pues yo ahora estoy intentando comprar menos y mejor, pero es difícil.'
-            ],
-            compras: [
-                'Uf, las compras... yo entro a por una cosa y salgo con tres. Un clásico.',
-                'Yo intento ir con lista pero da igual, siempre cae algo extra.'
-            ],
-            cuerpo: [
-                'Ay, el cuerpo... a esta edad ya empiezan las cositas. Yo intento cuidarme pero sin obsesionarme.',
-                'Pues yo tengo la espalda fatal de estar sentada todo el día. ¿Tú haces algo para eso?'
-            ]
-        };
+    // 1. Enseñanza explícita
+    var ens = extraerEnseñanza(raw);
+    if (ens) {
+        var ck = getMemory('custom_knowledge') || {};
+        ck[ens.q] = ens.a;
+        setMemory('custom_knowledge', ck);
+        return 'Vale, me lo apunto: ' + ens.q + ' es ' + ens.a + '. Lo recordaré.';
+    }
 
-        // ---- ANÁLISIS ----
-        function analizarMensaje(raw) {
-            const proc = normalize(raw);
-            const palabras = proc.split(/\s+/);
-            const puntuaciones = puntuarTemas(proc);
-            const esLargo = palabras.length > 8;
-            const nameMatch = raw.match(/(?:mi nombre es|me llamo|soy)\s+([a-zA-Záéíóúñü\s]{2,30})/i);
-            return { proc, palabras, puntuaciones, esLargo, nameMatch };
-        }
+    // 2. Buscar en lo aprendido
+    var conocimientos = getMemory('custom_knowledge') || {};
+    for (var k in conocimientos) {
+        if (proc === k) return conocimientos[k];
+        if (k.length >= 4 && proc.indexOf(k) !== -1) return conocimientos[k];
+    }
 
-        function extractTeaching(raw) {
-            let m1 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(.+?)\s+(?:es|son|significa|se llama)\s+(.+)/i);
-            if (m1 && m1[1] && m1[2]) return { question: normalize(m1[1]), answer: m1[2].trim() };
-            let m2 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(?:si te digo|cuando te diga|cuando diga)\s+(.+?)\s*[,.]?\s*(?:respondas|me digas|dime|contesta)\s+(.+)/i);
-            if (m2 && m2[1] && m2[2]) {
-                return { question: normalize(m2[1].replace(/["'«»]/g, '').trim()), answer: m2[2].replace(/["'«»]/g, '').trim() };
-            }
-            return null;
-        }
+    // 3. Nombre del usuario
+    var nombre = getMemory('user_name');
+    var llamada = nombre ? nombre : 'tío';
 
-        function palabrasDesconocidas(palabras) {
-            const contenidos = palabras.filter(w => w.length >= 4 && !STOPWORDS.includes(w));
-            return contenidos.filter(w => !esConocida(w));
-        }
+    // 4. Saludo
+    if (palabras.length <= 4 && /(hola|buenas|buenos dias|buenas tardes|buenas noches)/.test(proc)) {
+        return pickRandom([
+            '¡Hola ' + llamada + '! ¿Qué tal va todo? Cuéntame.',
+            '¡Hey! ¿Cómo va ese día?',
+            '¡Hola! ¿Qué te cuentas?'
+        ]);
+    }
 
-        // Elige el mejor tema según puntuación y longitud del mensaje.
-        function elegirTema(puntuaciones, numPalabras) {
-            const prioridad = ['sentimientos_mal','sexo','amor','trabajo','tecnologia','dinero','salud','estudios','musica','cine','comida','deporte','viajes','amistad','familia','futuro','clima','humor','animales','casa','transporte','ropa','compras','cuerpo','sentimientos_bien'];
-            // Umbral: si el mensaje es corto (<=3), cualquier puntos vale.
-            // Si es largo, se exige 1,5 puntos o más.
-            const umbral = numPalabras <= 3 ? 0.5 : 1.5;
-            let mejor = null;
-            let mejorPuntos = 0;
-            for (const tema of prioridad) {
-                if (puntuaciones[tema] && puntuaciones[tema] >= umbral && puntuaciones[tema] > mejorPuntos) {
-                    mejor = tema;
-                    mejorPuntos = puntuaciones[tema];
-                }
-            }
-            return mejor;
-        }
+    // 5. Preguntas sobre Lucía
+    if (/(a que te dedicas|en que trabajas)/.test(proc)) return 'Trabajo en marketing digital. ¿Y tú a qué te dedicas?';
+    if (/(que edad tienes|cuantos años tienes)/.test(proc)) return 'Tengo 25 años. En nada los 26.';
+    if (/(donde vives|de donde eres)/.test(proc)) return 'Soy de Madrid, vivo en un piso compartido.';
+    if (/(como te llamas)/.test(proc)) return 'Me llamo Lucía, encantada.';
+    if (/(tienes novio|tienes pareja)/.test(proc)) return 'Soltera ahora mismo. Y tampoco me agobia, la verdad.';
+    if (/(tienes mascota)/.test(proc)) return 'No, vivo de alquiler y no me dejan. Pero me encantaría tener un gato.';
 
-        // ---- INTENCIONES ESPECÍFICAS ----
-        // Estas se comprueban ANTES de los temas. Si coincide una, gana.
-        function detectarIntencion(proc, raw) {
-            // Cumpleaños
-            if (proc.match(/cumple|aniversario/)) {
-                return pickRandom([
-                    '¡Ay, qué majo! Pues es el 12 de mayo, apúntalo. ¿Y tú cuándo cumples?',
-                    'Uy, no te lo voy a decir, que luego me haces un regalo y me da vergüenza. ¿Y tú cuándo cumples?',
-                    'Jaja, vale, te aviso. Aunque tampoco hace falta, ¿eh? ¿Tú cuándo cumples?'
-                ]);
-            }
-            // Avisos / recuerdos
-            if (proc.match(/avisa|avisame|avisar|recuerda|recuérdame|no me olvides/)) {
-                return pickRandom([
-                    'Vale, te aviso. Apuntado.',
-                    'Hecho, te aviso. ¿Y tú qué, cómo va el día?',
-                    'Vale, vale, apuntado. Cuéntame algo más, ¿no?'
-                ]);
-            }
-            return null;
-        }
+    // 6. Cumpleaños
+    if (/cumple|aniversario/.test(proc)) {
+        return pickRandom([
+            '¡Ay, qué majo! Pues es el 12 de mayo. ¿Y tú cuándo cumples?',
+            'Uy, no te lo digo, que luego me haces un regalo. ¿Tú cuándo cumples?'
+        ]);
+    }
 
-        // ---- GENERADOR DE RESPUESTA ----
-        function generateResponse(raw) {
-            // 0. ¿ESPERANDO EXPLICACIÓN?
-            if (waitingForExplanation) {
-                const numPalabras = normalize(raw).split(/\s+/).length;
-                const esNegacion = /^(no se|ni idea|no lo se|no tengo ni idea|paso|nada)\b/i.test(normalize(raw));
-                if (numPalabras >= 3 && !esNegacion) {
-                    const { keyword } = waitingForExplanation;
-                    const ck = getMemory('custom_knowledge') || {};
-                    ck[keyword] = raw;
-                    setMemory('custom_knowledge', ck);
-                    waitingForExplanation = null;
-                    return pickRandom([
-                        '¡Ah, ahora sí! Me lo apunto. Gracias por explicármelo, me encanta aprender cosas nuevas.',
-                        '¡Uy, qué interesante! Ya lo tengo guardado. Gracias.',
-                        '¡Vale, ya lo pillo! Apuntado. Me gusta que me enseñes cosas.'
-                    ]);
-                }
-                waitingForExplanation = null;
-            }
+    // 7. Avisos
+    if (/avisa|avisame|recuerda|recuerdame/.test(proc)) {
+        return pickRandom(['Vale, te aviso. Apuntado.','Hecho, te aviso. ¿Y tú qué tal?']);
+    }
 
-            const analisis = analizarMensaje(raw);
-            const { proc, palabras, puntuaciones, esLargo, nameMatch } = analisis;
-            conversationCount++;
+    // 8. Hora
+    if (/hora/.test(proc) && esPregunta(raw)) {
+        var d = new Date();
+        return 'Son las ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0') + '.';
+    }
 
-            // 1. APRENDIZAJE EXPLÍCITO
-            const teaching = extractTeaching(raw);
-            if (teaching) {
-                let ck = getMemory('custom_knowledge') || {};
-                ck[teaching.question] = teaching.answer;
-                setMemory('custom_knowledge', ck);
-                return 'Vale, me lo apunto: ' + teaching.question + ' es ' + teaching.answer + '. Lo recordaré.';
-            }
+    // 9. Qué te cuento
+    if (/(que te cuento|que quieres que te cuente|de que hablamos|cuentame algo|dime algo)/.test(proc)) {
+        return pickRandom([
+            'Cuéntame lo que sea: cómo ha ido tu día, algo que te ronde la cabeza...',
+            'Lo que tú quieras. ¿Cómo ha ido el día?',
+            'Cuéntame algo de ti. Lo que salga.'
+        ]);
+    }
 
-            // 2. BUSCAR EN LO APRENDIDO
-            let customKnowledge = getMemory('custom_knowledge') || {};
-            for (let key in customKnowledge) {
-                if (proc === key) return customKnowledge[key];
-                if (key.length >= 4 && proc.includes(key)) return customKnowledge[key];
-            }
+    // 10. Cariño
+    if (/(te quiero|te adoro|me gustas)/.test(proc)) {
+        return '¡Ay, qué bonito! Yo también te tengo cariño.';
+    }
 
-            // 3. NOMBRES
-            if (nameMatch && nameMatch[1]) {
-                const nombre = capitalize(nameMatch[1].trim().split(' ')[0]);
-                setMemory('user_name', nombre);
-                return '¡Encantada, ' + nombre + '! ¿Y a qué te dedicas, si se puede saber?';
-            }
-            if (waitingForUserName) {
-                let possibleName = raw.trim();
-                if (possibleName.length > 1 && possibleName.length < 30 && !possibleName.includes(' ')) {
-                    setMemory('user_name', capitalize(possibleName));
-                    waitingForUserName = false;
-                    return '¡Encantada, ' + capitalize(possibleName) + '! ¿Qué tal, cuéntame algo de ti?';
-                }
-                waitingForUserName = false;
-            }
-            if (proc.match(/(cual es mi nombre|como me llamo|sabes mi nombre)/)) {
-                const userName = getMemory('user_name');
-                if (userName) return 'Te llamas ' + userName + ', claro. No se me olvida.';
-                waitingForUserName = true;
-                return 'Pues no me lo has dicho todavía. ¿Cómo te llamas?';
-            }
-            if (proc.match(/(como te llamas|tu nombre|tienes nombre)/)) {
-                return 'Me llamo Lucía, tengo 25 años. Encantada.';
-            }
+    // 11. Temas
+    var temas = detectarTemas(proc);
+    if (temas.length > 0) {
+        var prioridad = ['sentimientos_mal','sentimientos_bien','sexo','amor','trabajo','tecnologia','dinero','salud','estudios','musica','cine','comida','deporte','viajes','amistad','familia','clima','animales','casa','transporte','ropa','cuerpo'];
+        for (var i = 0; i < prioridad.length; i++) {
+            if (temas.indexOf(prioridad[i]) !== -1 && RESPUESTAS[prioridad[i]]) {
+                var resp = pickRandom(RESPUESTAS[prioridad[i]]);
 
-            const userName = getMemory('user_name');
-            const userCall = userName ? userName : 'tío';
-
-            // 4. INTENCIONES ESPECÍFICAS (antes que los temas)
-            const intencion = detectarIntencion(proc, raw);
-            if (intencion) return intencion;
-
-            // 5. SALUDOS
-            if (palabras.length <= 4 && proc.match(/(hola|buenas|saludos|buenos dias|buenas tardes|buenas noches)/)) {
-                lastTopic = 'saludo';
-                return pickRandom([
-                    '¡Hola ' + userCall + '! ¿Qué tal va todo? Cuéntame.',
-                    '¡Hey! ¿Cómo va ese día? Cuéntame algo.',
-                    '¡Hola! ¿Qué te cuentas? Hacía rato que no hablábamos.'
-                ]);
-            }
-
-            // 6. PREGUNTAS SOBRE LUCÍA
-            if (proc.match(/(a que te dedicas|en que trabajas|trabajas)/)) {
-                return 'Trabajo en marketing digital, en una agencia pequeña. Hay días de caos pero me gusta. ¿Y tú a qué te dedicas?';
-            }
-            if (proc.match(/(que edad tienes|cuantos anos tienes)/)) {
-                return 'Tengo 25 años. En nada los 26, que ya me va tocando.';
-            }
-            if (proc.match(/(donde vives|de donde eres)/)) {
-                return 'Soy de Madrid, y vivo aquí en un piso compartido con una amiga. El alquiler está imposible, ya sabes.';
-            }
-            if (proc.match(/(estudiaste|que estudiaste|carrera)/)) {
-                return 'Estudié Publicidad y Relaciones Públicas. Ahora estoy pensando en hacer algún curso más creativo.';
-            }
-            if (proc.match(/(estas soltera|tienes novio|tienes pareja)/)) {
-                return 'Soltera ahora mismo. Y bueno, tampoco me agobia. Prefiero estar bien conmigo misma antes que con cualquiera.';
-            }
-            if (proc.match(/(que musica te gusta|que escuchas)/)) {
-                return 'Escucho mucho indie, algo de pop y depende del día. ¿Tú qué música escuchas?';
-            }
-            if (proc.match(/(que series ves|que peliculas te gustan)/)) {
-                return 'Estoy enganchada a una serie de misterio. Y para pelis me tira el cine independiente. ¿Alguna recomendación?';
-            }
-            if (proc.match(/(tienes mascota|te gustan los animales)/)) {
-                return 'Me encantaría tener un gato, pero como vivo de alquiler no me dejan. De momento me conformo con los de mis amigas.';
-            }
-
-            // 7. RESPUESTA POR TEMA (con puntuación)
-            const temaElegido = elegirTema(puntuaciones, palabras.length);
-            if (temaElegido && RESPUESTAS[temaElegido]) {
-                lastTopic = temaElegido;
-                let respuesta = pickRandom(RESPUESTAS[temaElegido]);
-                if (esLargo) {
-                    respuesta += pickRandom([
-                        ' Cuéntame más, que me has dejado con la intriga.',
-                        ' ¿Y cómo te hace sentir eso?',
-                        ' Me interesa mucho lo que me cuentas.',
-                        ' ¿Y qué piensas hacer?'
-                    ]);
-                }
+                // Si hay palabras desconocidas y no es pregunta, pide explicación
                 if (!esPregunta(raw)) {
-                    const desconocidas = palabrasDesconocidas(palabras);
-                    const raras = desconocidas.filter(w => w.length >= 6);
-                    if (desconocidas.length >= 2 || raras.length >= 1) {
-                        raras.sort((a, b) => b.length - a.length);
-                        waitingForExplanation = { keyword: raras[0] || desconocidas[0] };
-                        respuesta += pickRandom([
-                            ' Por cierto, ¿me lo puedes explicar? Me pica la curiosidad.',
-                            ' Y háblame más de eso, que quiero aprender.',
-                            ' Explícamelo, por favor, que me interesa.',
-                            ' ¿Y tú qué sabes de eso? Cuéntame, que quiero aprender.'
+                    var desc = palabrasDesconocidas(raw);
+                    var raras = desc.filter(function(w) { return w.length >= 6; });
+                    if (desc.length >= 2 || raras.length >= 1) {
+                        raras.sort(function(a, b) { return b.length - a.length; });
+                        var keyword = raras[0] || desc[0];
+                        esperandoExplicacion = { keyword: keyword };
+                        resp += pickRandom([
+                            ' Por cierto, ¿me lo explicas? Que quiero aprender.',
+                            ' Y háblame más de eso, que me pica la curiosidad.',
+                            ' ¿Me lo cuentas? Me interesa.'
                         ]);
                     }
                 }
-                return respuesta;
+                return resp;
             }
-
-            // 8. QUÉ TE CUENTO
-            if (proc.match(/(que te cuento|que quieres que te cuente|de que te hablo|de que quieres que hable|que te digo|que hablamos|que quieres saber|cuentame algo|dime algo|hablame de algo)/)) {
-                return pickRandom([
-                    'Cuéntame lo que sea: cómo ha ido tu día, algo que te haya pasado hoy, algo que te ronde la cabeza. Me gusta escuchar.',
-                    'Lo que tú quieras, de verdad. ¿Cómo ha ido el día? ¿Algo bueno o algo malo?',
-                    'Cuéntame algo de ti: qué te gusta, qué te preocupa, qué te ha pasado hoy. Lo que salga.'
-                ]);
-            }
-
-            // 9. HORA
-            if (proc.includes('hora') && esPregunta(raw)) {
-                const d = new Date();
-                return 'Son las ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0') + '. ¿Tienes prisa o seguimos charlando?';
-            }
-
-            // 10. CARIÑO
-            if (proc.match(/(te quiero|te adoro|me gustas)/)) {
-                return '¡Ay, qué bonito! Yo también te tengo cariño, ' + userCall + '. Eres un encanto.';
-            }
-
-            // 11. RESPUESTA LARGA GENÉRICA
-            if (esLargo) {
-                lastTopic = 'general_largo';
-                return pickRandom([
-                    'Vaya, veo que tienes mucho que contar. Me gusta escucharte, de verdad. ¿Y tú cómo llevas todo eso?',
-                    'Entiendo lo que me dices. A veces las cosas se complican, ¿no? ¿Y qué es lo que más te preocupa ahora mismo?',
-                    'Me parece muy interesante lo que cuentas. Yo creo que hay que ir paso a paso, sin agobiarse. ¿Tú qué opinas?',
-                    'Ostras, pues suena a que tienes un lío importante. Si quieres desahogarte, aquí estoy. ¿Qué es lo que más te ronda la cabeza?'
-                ]);
-            }
-
-            // 12. RESPUESTAS CORTAS
-            if (palabras.length <= 3) {
-                return pickRandom([
-                    'Cuéntame más, que me dejas con la intriga.',
-                    '¿Y eso? A ver, explícame un poco más.',
-                    'Mmm, interesante. Sigue, sigue.',
-                    '¿En serio? Y qué más.'
-                ]);
-            }
-
-            // 13. FALLBACK CON CURIOSIDAD
-            if (!esPregunta(raw)) {
-                const desconocidas = palabrasDesconocidas(palabras);
-                const raras = desconocidas.filter(w => w.length >= 6);
-                if (desconocidas.length >= 2 || raras.length >= 1) {
-                    raras.sort((a, b) => b.length - a.length);
-                    waitingForExplanation = { keyword: raras[0] || desconocidas[0] };
-                    return pickRandom([
-                        'Uy, eso no lo pillo. ¿Me lo explicas? Que quiero aprender.',
-                        'Mmm, no sé qué es eso. Explícamelo, por favor, que me pica la curiosidad.',
-                        'No conozco eso, la verdad. ¿Me lo cuentas? Me encanta aprender cosas nuevas.',
-                        'Me pillas, no sé de qué me hablas. ¿Me lo explicas? Quiero aprender.'
-                    ]);
-                }
-            }
-
-            // 14. FALLBACK FINAL
-            return pickRandom([
-                'A ver si te entiendo... ¿me lo explicas con otras palabras?',
-                'Pues no sé qué decirte a eso. ¿Cambiamos de tema o me cuentas más?',
-                'Mmm, vale. ¿Y eso cómo va?',
-                'Vale, vale. Sigue contándome.'
-            ]);
         }
+    }
 
-        // ---- VOZ ----
-        let voices = [];
-        function loadVoices() { voices = window.speechSynthesis.getVoices(); }
-        if (window.speechSynthesis) { window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }
+    // 12. Mensajes largos
+    if (palabras.length > 8) {
+        return pickRandom([
+            'Vaya, veo que tienes mucho que contar. Me gusta escucharte. ¿Y tú cómo lo llevas?',
+            'Entiendo lo que me dices. ¿Y qué es lo que más te preocupa?',
+            'Me parece interesante lo que cuentas. ¿Tú qué opinas?'
+        ]);
+    }
 
-        let isSpeaking = false;
-        let lastSpokenText = '';
+    // 13. Mensajes cortos
+    if (palabras.length <= 3) {
+        return pickRandom([
+            'Cuéntame más, que me dejas con la intriga.',
+            '¿Y eso? Explícame un poco más.',
+            'Mmm, interesante. Sigue.',
+            '¿En serio? Y qué más.'
+        ]);
+    }
 
-        function speak(text) {
-            if (!window.speechSynthesis) return;
-            window.speechSynthesis.cancel();
-            isSpeaking = true;
-            lastSpokenText = text;
-            document.getElementById('statusText').textContent = 'Hablando...';
-
-            setTimeout(() => {
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'es-ES';
-                u.rate = 1.0;
-                let selectedVoice = voices.find(v => v.lang.startsWith('es') && v.name.toLowerCase().includes('female'));
-                if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('es'));
-                if (selectedVoice) u.voice = selectedVoice;
-
-                u.onend = () => {
-                    isSpeaking = false;
-                    document.getElementById('statusText').textContent = 'Toca el micrófono o escribe un mensaje';
-                };
-                u.onerror = () => {
-                    isSpeaking = false;
-                    document.getElementById('statusText').textContent = 'Error de audio.';
-                };
-
-                window.speechSynthesis.speak(u);
-                window.speechSynthesis.resume();
-            }, 600);
+    // 14. Fallback con curiosidad
+    if (!esPregunta(raw)) {
+        var desc2 = palabrasDesconocidas(raw);
+        var raras2 = desc2.filter(function(w) { return w.length >= 6; });
+        if (desc2.length >= 2 || raras2.length >= 1) {
+            raras2.sort(function(a, b) { return b.length - a.length; });
+            return pedirExplicacion(raras2[0] || desc2[0]);
         }
+    }
 
-        // ---- RECONOCIMIENTO DE VOZ ----
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition = null;
-        let isListening = false;
-        let transcriptText = '';
+    // 15. Fallback final
+    return pickRandom([
+        'A ver si te entiendo... ¿me lo explicas de otra forma?',
+        'Pues no sé qué decirte. ¿Cambiamos de tema?',
+        'Mmm, vale. ¿Y eso cómo va?'
+    ]);
+}
 
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition();
-            recognition.lang = 'es-ES';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
+// ---------- VOZ ----------
+var voices = [];
+function loadVoices() { voices = window.speechSynthesis.getVoices(); }
+if (window.speechSynthesis) {
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    loadVoices();
+}
 
-            recognition.onstart = () => { isListening = true; document.getElementById('micBtn').classList.add('listening'); document.getElementById('statusText').textContent = 'Escuchando...'; };
-            recognition.onresult = (event) => { transcriptText = event.results[0][0].transcript; };
-            recognition.onerror = () => { isListening = false; document.getElementById('micBtn').classList.remove('listening'); document.getElementById('statusText').textContent = 'Error. Toca para reintentar'; };
-            recognition.onend = () => {
-                isListening = false;
-                document.getElementById('micBtn').classList.remove('listening');
-                if (transcriptText && transcriptText.trim() !== '') {
-                    sendMessage(transcriptText);
-                    transcriptText = '';
-                } else {
-                    document.getElementById('statusText').textContent = 'No te he oído. Toca el micro o escribe.';
-                }
-            };
+var isSpeaking = false;
+var lastSpokenText = '';
+
+function speak(text) {
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+    isSpeaking = true;
+    lastSpokenText = text;
+    document.getElementById('statusText').textContent = 'Hablando...';
+    setTimeout(function() {
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'es-ES';
+        u.rate = 1.0;
+        var v = null;
+        for (var i = 0; i < voices.length; i++) {
+            if (voices[i].lang.indexOf('es') === 0) { v = voices[i]; break; }
+        }
+        if (v) u.voice = v;
+        u.onend = function() {
+            isSpeaking = false;
+            document.getElementById('statusText').textContent = 'Toca el micrófono o escribe un mensaje';
+        };
+        u.onerror = function() {
+            isSpeaking = false;
+            document.getElementById('statusText').textContent = 'Error de audio.';
+        };
+        window.speechSynthesis.speak(u);
+        window.speechSynthesis.resume();
+    }, 400);
+}
+
+// ---------- RECONOCIMIENTO DE VOZ ----------
+var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+var recognition = null;
+var isListening = false;
+var transcriptText = '';
+
+if (SpeechRecognition) {
+    recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = function() {
+        isListening = true;
+        document.getElementById('micBtn').classList.add('listening');
+        document.getElementById('statusText').textContent = 'Escuchando...';
+    };
+    recognition.onresult = function(event) {
+        transcriptText = event.results[0][0].transcript;
+    };
+    recognition.onerror = function() {
+        isListening = false;
+        document.getElementById('micBtn').classList.remove('listening');
+        document.getElementById('statusText').textContent = 'Error. Toca para reintentar';
+    };
+    recognition.onend = function() {
+        isListening = false;
+        document.getElementById('micBtn').classList.remove('listening');
+        if (transcriptText && transcriptText.trim() !== '') {
+            sendMessage(transcriptText);
+            transcriptText = '';
         } else {
-            document.getElementById('micBtn').disabled = true;
-            document.getElementById('statusText').textContent = 'Micrófono no soportado';
+            document.getElementById('statusText').textContent = 'No te he oído.';
         }
+    };
+} else {
+    document.getElementById('micBtn').disabled = true;
+    document.getElementById('statusText').textContent = 'Micrófono no soportado';
+}
 
-        document.getElementById('micBtn').addEventListener('click', () => {
-            if (!recognition || isSpeaking) return;
-            if (isListening) recognition.stop();
-            else { window.speechSynthesis.cancel(); recognition.start(); }
-        });
+document.getElementById('micBtn').addEventListener('click', function() {
+    if (!recognition || isSpeaking) return;
+    if (isListening) recognition.stop();
+    else { window.speechSynthesis.cancel(); recognition.start(); }
+});
 
-        document.getElementById('repeatBtn').addEventListener('click', () => {
-            if (lastSpokenText) speak(lastSpokenText);
-            else speak('Hola, soy Lucía. ¿Qué tal?');
-        });
+document.getElementById('repeatBtn').addEventListener('click', function() {
+    if (lastSpokenText) speak(lastSpokenText);
+    else speak('Hola, soy Lucía. ¿Qué tal?');
+});
 
-        // ---- UI ----
-        const chatContainer = document.getElementById('chatContainer');
-        const inputText = document.getElementById('inputText');
+// ---------- UI ----------
+var chatContainer = document.getElementById('chatContainer');
+var inputText = document.getElementById('inputText');
 
-        function addMessage(sender, text) {
-            const div = document.createElement('div');
-            div.className = 'message ' + (sender === 'Tú' ? 'user-message' : 'bot-message');
-            div.textContent = text;
-            chatContainer.appendChild(div);
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
+function addMessage(sender, text) {
+    var div = document.createElement('div');
+    div.className = 'message ' + (sender === 'Tú' ? 'user-message' : 'bot-message');
+    div.textContent = text;
+    chatContainer.appendChild(div);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
 
-        function sendMessage(text) {
-            const cleanText = text.trim();
-            if (!cleanText) return;
-            addMessage('Tú', cleanText);
-            const res = generateResponse(cleanText);
-            addMessage('Bot', res);
-            speak(res);
-        }
+function sendMessage(text) {
+    var clean = text.trim();
+    if (!clean) return;
+    addMessage('Tú', clean);
+    var res = generateResponse(clean);
+    addMessage('Bot', res);
+    speak(res);
+}
 
-        document.getElementById('sendBtn').addEventListener('click', () => {
-            sendMessage(inputText.value);
-            inputText.value = '';
-        });
+document.getElementById('sendBtn').addEventListener('click', function() {
+    sendMessage(inputText.value);
+    inputText.value = '';
+});
 
-        inputText.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage(inputText.value);
-                inputText.value = '';
-            }
-        });
-    </script>
+inputText.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        sendMessage(inputText.value);
+        inputText.value = '';
+    }
+});
+</script>
 </body>
 </html>
