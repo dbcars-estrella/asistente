@@ -87,14 +87,12 @@
             return /^(que|quien|quienes|como|cuando|donde|cual|cuales|cuanto|cuanta|cuantos|cuantas|por que|para que)\b/.test(n);
         }
 
-        // ---- PREGUNTAS DE CURIOSIDAD (mezcla genéricas y específicas) ----
+        // ---- PREGUNTAS DE CURIOSIDAD ----
         const PREGUNTAS_CURIOSIDAD = [
-            // Genéricas
             ' Por cierto, ¿me lo puedes explicar? Me pica la curiosidad.',
             ' Y háblame más de eso, que quiero aprender.',
             ' Explícamelo, por favor, que me interesa.',
             ' Cuéntame más, que me pica la curiosidad.',
-            // Con más enjundia
             ' ¿Y tú qué sabes de eso? Cuéntame, que quiero aprender.',
             ' ¿Cómo va eso exactamente? Háblame, que me interesa.',
             ' ¿Tú lo has vivido? Cuéntame más.',
@@ -336,11 +334,9 @@
             return null;
         }
 
-        // Devuelve la lista de palabras desconocidas del mensaje
         function palabrasDesconocidas(palabras) {
             const contenidos = palabras.filter(w => w.length >= 4 && !STOPWORDS.includes(w));
-            const desconocidas = contenidos.filter(w => !esConocida(w));
-            return desconocidas;
+            return contenidos.filter(w => !esConocida(w));
         }
 
         // ---- GENERADOR DE RESPUESTA ----
@@ -467,7 +463,6 @@
                             respuesta += pickRandom(coletillas);
                         }
 
-                        // Si hay palabras que no conoce, pide explicación tras su respuesta
                         if (!esPregunta(raw)) {
                             const desconocidas = palabrasDesconocidas(palabras);
                             const raras = desconocidas.filter(w => w.length >= 6);
