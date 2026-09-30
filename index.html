@@ -44,15 +44,7 @@ input[type="text"]:focus { border-color: var(--primary); }
 <button class="repeat-btn" id="repeatBtn">🔊 Probar sonido / Repetir</button>
 </div>
 
-<script>
-// ---------- UTILIDADES ----------
-function normalize(s) { if (!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
-function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function setMemory(k, v) { localStorage.setItem('vc_mem_' + k, JSON.stringify(v)); }
-function getMemory(k) { const v = localStorage.getItem('vc_mem_' + k); return v ? JSON.parse(v) : null; }
-
-// ---------- ESTADO ----------
+< ESTADO ----------
 let esperandoExplicacion = null; // { keyword }
 
 // ---------- VOCABULARIO BÁSICO ----------
