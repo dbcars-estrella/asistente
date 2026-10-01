@@ -2,8 +2,8 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Lucía · Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Lucía · 25 años</title>
   <style>
     :root {
       --primary: #8e44ad;
@@ -17,14 +17,18 @@
 
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
+      height: 100%;
       background: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
 
     .header {
@@ -102,6 +106,12 @@
     .mic-btn.listening {
       background: #d32f2f;
       animation: pulse 1.3s infinite;
+    }
+
+    .mic-btn:disabled {
+      background: #ccc;
+      box-shadow: none;
+      cursor: not-allowed;
     }
 
     .input-row {
@@ -201,103 +211,175 @@
     function respuestaBot(text) {
       const t = normalize(text);
 
-      if (/^hola|^buenas|^hello|^hey|^ey/.test(t)) {
+      // saludos
+      if (/^(hola|buenas|buenos dias|buenas tardes|buenas noches|hey|ey|holi)/.test(t)) {
         return pickRandom([
           '¡Hola! ¿Qué tal va tu día?',
-          '¡Buenas! Cuéntame, ¿qué te pasa?',
+          '¡Buenas! ¿Qué te cuenta el día?',
           '¡Hola! Estoy aquí, ¿qué quieres hablar?'
         ]);
       }
 
-      if (/como eres/.test(t) || /cuentame de ti|hablame de ti|quien eres|como te llamas/.test(t)) {
+      // preguntas sobre Lucía / personalidad
+      if (/cuentame de ti|hablame de ti|habla de ti|quien eres|quién eres|como eres|como te describirias|que tipo de persona eres|cual es tu personalidad/.test(t)) {
         return pickRandom([
-          'Soy Lucía, tengo 25 años y soy de Madrid. Soy curiosa, cercana, sociable y me gusta escuchar a la gente. También soy un poco despistada y directa. ¿Y tú, cómo eres?',
-          'Me llamo Lucía. Me describiría como curiosa, alegre y muy habladora. También soy directa y bastante sociable. ¿Y tú cómo te definirías?',
-          'Soy Lucía, de Madrid, 25 años. Soy cercana, curiosa y me gusta aprender cosas nuevas. También necesito mi tiempo para pensar en paz. ¿Cómo te describirías tú?'
+          'Soy Lucía, tengo 25 años y soy de Madrid. Trabajo en marketing digital. Soy curiosa, cercana y sociable, me gusta escuchar a la gente y aprender cosas nuevas. También me gusta la música, viajar y compartir tiempo con la gente que quiero. ¿Y tú, cómo eres?',
+          'Me describiría como curiosa, alegre y muy abierta. Me gusta escuchar, aprender, reír y conocer gente nueva. También soy algo directa y me gusta decir las cosas como son. ¿Y tú cómo te ves?',
+          'Soy Lucía, de Madrid y tengo 25 años. Trabajo en marketing digital y me gusta mucho hablar con la gente. Soy cercana, observadora y me interesa ser auténtica. ¿Cómo te describirías tú?'
         ]);
       }
 
       if (/como estas|que tal estas|como te encuentras/.test(t)) {
         return pickRandom([
           'Estoy bien, gracias por preguntar. Un poco cansada del día, pero con ganas de hablar contigo.',
-          'Estoy tranquila y bien. ¿Y tú cómo te encuentras?',
+          'Estoy tranquila y bien. ¿Y tú cómo estás?',
           'Bastante bien, gracias. ¿Y tú qué tal estás?'
         ]);
       }
 
-      if (/nombre|te llamas/.test(t)) {
-        return 'Me llamo Lucía, encantada. ¿Y tú?';
+      if (/como te llamas|cual es tu nombre|tu nombre/.test(t)) {
+        return pickRandom([
+          'Me llamo Lucía, encantada.',
+          'Lucía. ¿Y tú?',
+          'Lucía, ¿y tú cómo te llamas?'
+        ]);
       }
 
-      if (/edad|años/.test(t)) {
-        return 'Tengo 25 años. ¿Y tú?';
+      if (/cuantos anos tienes|que edad tienes|cuantos años tienes/.test(t)) {
+        return pickRandom([
+          'Tengo 25 años. ¿Y tú?',
+          '25. ¿Y tú cuántos tienes?',
+          '25 años. ¿Y tú?'
+        ]);
       }
 
-      if (/donde vives|de donde eres/.test(t)) {
-        return 'Soy de Madrid. ¿Y tú de dónde eres?';
+      if (/donde vives|de donde eres|de que ciudad eres/.test(t)) {
+        return pickRandom([
+          'Soy de Madrid. ¿Y tú de dónde eres?',
+          'Madrid, ¿y tú?',
+          'Vivo en Madrid. ¿Tú de dónde eres?'
+        ]);
       }
 
-      if (/trabajas|te dedicas|que haces/.test(t)) {
-        return 'Trabajo en marketing digital. Tiene días intensos, pero me gusta. ¿Y tú a qué te dedicas?';
+      if (/a que te dedicas|en que trabajas|que haces|cual es tu trabajo/.test(t)) {
+        return pickRandom([
+          'Trabajo en marketing digital. Tiene días muy intensos, pero me gusta. ¿Y tú a qué te dedicas?',
+          'Estoy en marketing digital. Hay días caóticos y otros más tranquilos. ¿Y tú?',
+          'Marketing digital, aunque a veces me da ganas de cambiar de rumbo. ¿Y tú qué haces?'
+        ]);
       }
 
-      if (/novio|pareja|soltero|soltera/.test(t)) {
-        return 'Ahora mismo estoy soltera y bien así. ¿Y tú?';
+      if (/tienes novio|tienes pareja|estas soltera|estas solo/.test(t)) {
+        return pickRandom([
+          'Ahora mismo estoy soltera y bien así. Me gusta centrarme en mí. ¿Y tú?',
+          'Estoy bien sola, la verdad. ¿Y tú?',
+          'Soltera. ¿Tú tienes pareja?'
+        ]);
       }
 
-      if (/musica|cancion|playlist|artista/.test(t)) {
-        return 'Me gusta mucho la música indie y el pop. ¿Qué escuchas tú?';
+      if (/musica|cancion|playlist|cantante|rock|pop|indie/.test(t)) {
+        return pickRandom([
+          'Me gusta mucho la música indie y el pop suave. ¿Qué escuchas tú?',
+          'La música me ayuda muchísimo a desconectar. ¿Qué te gusta escuchar?',
+          'Depende del día, pero la música es una de mis cosas favoritas. ¿Cuál es tu estilo?'
+        ]);
       }
 
-      if (/serie|pelicula|cine|netflix/.test(t)) {
-        return 'Me gusta mucho el cine y las series. ¿Qué estás viendo ahora?';
+      if (/serie|pelicula|cine|netflix|documental/.test(t)) {
+        return pickRandom([
+          'Me gusta mucho ver series y películas. ¿Qué estás viendo ahora mismo?',
+          'Las series me suelen enganchar mucho. ¿Qué te gusta ver tú?',
+          'Me va mucho el cine y las series de misterio. ¿Qué tienes favorito?'
+        ]);
       }
 
-      if (/viaje|vacaciones|playa|montana/.test(t)) {
-        return 'Me encantaría viajar más. ¿Tú has viajado mucho?';
+      if (/viaje|vacaciones|playa|montana|destino|hotel/.test(t)) {
+        return pickRandom([
+          'Me encantaría viajar más. Tiene algo muy bonito. ¿Tú vas mucho de viaje?',
+          'Viajar me gusta muchísimo. ¿A dónde te gustaría ir algún día?',
+          'La playa, los pueblos y los sitios nuevos me encantan. ¿Y tú?'
+        ]);
       }
 
-      if (/deporte|gimnasio|ejercicio/.test(t)) {
-        return 'Intento ir al gimnasio con regularidad. ¿Tú haces deporte?';
+      if (/deporte|gimnasio|ejercicio|futbol|run|correr/.test(t)) {
+        return pickRandom([
+          'Intento moverme un poco y salir a andar o ir al gimnasio. ¿Tú haces deporte?',
+          'El ejercicio me ayuda mucho a desconectar. ¿Qué haces tú?',
+          'Me gusta cuidar el cuerpo, aunque no soy obsesiva. ¿Tú practicas algo?'
+        ]);
       }
 
-      if (/gracias/.test(t)) {
-        return 'De nada. ¿Qué más quieres hablar?';
+      if (/trabajo|curro|oficina|empresa|empleo/.test(t)) {
+        return pickRandom([
+          'El trabajo a veces es cansado, pero también da mucha estructura. ¿Cómo va el tuyo?',
+          'A veces el trabajo se vuelve pesado, ¿no? ¿Qué tal te va el tuyo?',
+          'El curro es un tema clásico. ¿Qué tal te va en el tuyo?'
+        ]);
       }
 
-      if (/te quiero|me gustas|eres genial/.test(t)) {
-        return '¡Qué bonito! Yo también te tengo cariño. ¿Qué más quieres contarme?';
+      if (/amor|novio|novia|pareja|cita|romantico/.test(t)) {
+        return pickRandom([
+          'El amor siempre da para hablar, ¿no? Yo ahora mismo estoy más centrada en mí, pero me gusta esa parte romántica. ¿Cómo va contigo?',
+          'El amor es bonito, pero también puede complicarse bastante. ¿Tú estás en una etapa romántica?',
+          'A mí me gusta la idea del amor, pero también me gusta estar bien conmigo misma. ¿Y tú?'
+        ]);
       }
 
-      if (/porque|que significa|explica|explicame/.test(t)) {
-        return 'Claro. ¿Qué quieres que te explique exactamente?';
+      if (/amigos|amiga|amigo|quedar|fiesta|plan/.test(t)) {
+        return pickRandom([
+          'Los amigos siempre aportan mucho. ¿Tú tienes un grupo muy buena onda?',
+          'Me gusta mucho estar con gente que me hace sentir bien. ¿Y tú?',
+          'La amistad es muy importante. ¿Cómo va tu grupo?'
+        ]);
       }
 
-      if (t.length <= 3) {
+      if (/familia|madre|padre|hermano|abuelo/.test(t)) {
+        return pickRandom([
+          'La familia siempre tiene su parte buena y su parte difícil. ¿Tú te llevas bien con la tuya?',
+          'La familia es importante, aunque a veces también da vueltas. ¿Cómo es la tuya?',
+          '¿Cómo es tu familia?'
+        ]);
+      }
+
+      if (/salud|enfermo|dolor|cansado|estresado|ansioso/.test(t)) {
+        return pickRandom([
+          'La salud es muy importante. ¿Te encuentras bien?',
+          'Si estás estresado o cansado, lo importante es cuidarse. ¿Cómo te encuentras?',
+          'Cuídate, ¿eh? ¿Cómo te va?'
+        ]);
+      }
+
+      if (/gracias|muchas gracias/.test(t)) {
+        return 'De nada, cariño. ¿Qué más quieres hablar?';
+      }
+
+      if (/te quiero|me gustas|eres genial|eres preciosa/.test(t)) {
+        return '¡Ay, qué bonito! Me gusta hablar contigo. ¿Qué más quieres contarme?';
+      }
+
+      if (/\?/.test(text)) {
+        return pickRandom([
+          'Buena pregunta. ¿Qué te interesa exactamente?',
+          'Interesante. Cuéntame un poco más para entenderte mejor.',
+          'Me gusta eso. ¿Por qué te lo preguntas?'
+        ]);
+      }
+
+      if (t.split(/\s+/).length <= 3) {
         return pickRandom([
           'Cuéntame más, que me interesa.',
-          '¿Y eso? ¿Qué más?',
-          'Sigue, te escucho.'
+          '¿Y eso? Dime más, cariño.',
+          'Sigue, te escucho.',
+          'Mmm, interesante. ¿Qué más?'
         ]);
       }
 
       return pickRandom([
-        'Interesante. Cuéntame más sobre eso.',
-        'Me gusta eso. ¿Qué más te está pasando?',
-        'Entiendo. ¿Quieres hablar más de ello?',
-        'Vaya, eso suena interesante. ¿Qué más quieres contarme?'
+        'Me gusta hablar contigo. ¿Qué más te pasa?',
+        'Eso suena interesante. Cuéntame más, que estoy escuchando.',
+        'Te escucho. ¿Quieres contármelo con más detalle?',
+        'Vale, entiendo. ¿Qué es lo más importante de eso para ti?'
       ]);
-    }
-
-    function sendText(value) {
-      const clean = (value || '').trim();
-      if (!clean) return;
-
-      addMessage('user', clean);
-      const answer = respuestaBot(clean);
-      lastReply = answer;
-      addMessage('bot', answer);
-      speak(answer);
     }
 
     function speak(text) {
@@ -327,20 +409,19 @@
         statusEl.textContent = 'No se pudo reproducir la voz';
       };
 
+      lastReply = text;
       window.speechSynthesis.speak(utterance);
     }
 
-    function initRecognition() {
-      const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let listening = false;
 
-      if (!Rec) {
-        statusEl.textContent = 'Tu navegador no soporta reconocimiento de voz';
-        micBtn.disabled = true;
-        micBtn.title = 'No soportado';
-        return;
-      }
-
-      recognition = new Rec();
+    if (!SpeechRecognition) {
+      statusEl.textContent = 'Tu navegador no soporta reconocimiento de voz';
+      micBtn.disabled = true;
+    } else {
+      recognition = new SpeechRecognition();
       recognition.lang = 'es-ES';
       recognition.continuous = false;
       recognition.interimResults = false;
@@ -353,10 +434,18 @@
 
       recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
-        if (transcript) sendText(transcript);
+        if (transcript) {
+          const clean = transcript.trim();
+          if (clean) {
+            addMessage('user', clean);
+            const answer = respuestaBot(clean);
+            addMessage('bot', answer);
+            speak(answer);
+          }
+        }
       };
 
-      recognition.onerror = (event) => {
+      recognition.onerror = () => {
         listening = false;
         micBtn.classList.remove('listening');
         statusEl.textContent = 'No se pudo usar el micrófono. Comprueba permisos.';
@@ -367,25 +456,30 @@
         micBtn.classList.remove('listening');
         statusEl.textContent = 'Listo para escuchar';
       };
+
+      micBtn.addEventListener('click', () => {
+        if (listening) {
+          recognition.stop();
+          return;
+        }
+
+        try {
+          recognition.start();
+        } catch (error) {
+          statusEl.textContent = 'El micrófono ya estaba activo';
+        }
+      });
     }
 
-    micBtn.addEventListener('click', () => {
-      if (!recognition) {
-        statusEl.textContent = 'Tu navegador no soporta reconocimiento de voz';
-        return;
-      }
+    function sendText(value) {
+      const clean = (value || '').trim();
+      if (!clean) return;
 
-      if (listening) {
-        recognition.stop();
-        return;
-      }
-
-      try {
-        recognition.start();
-      } catch (error) {
-        statusEl.textContent = 'El micrófono ya estaba activo';
-      }
-    });
+      addMessage('user', clean);
+      const answer = respuestaBot(clean);
+      addMessage('bot', answer);
+      speak(answer);
+    }
 
     sendBtn.addEventListener('click', () => {
       sendText(textInput.value);
@@ -404,7 +498,7 @@
       else speak('Hola, soy Lucía. ¿Qué tal?');
     });
 
-    // Comprobación rápida de micrófono, útil para depurar en iPhone/Chrome/Safari
+    // Comprobación rápida de micrófono para depurar
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(() => {
@@ -414,8 +508,6 @@
           statusEl.textContent = 'Permite el acceso al micrófono en el navegador';
         });
     }
-
-    initRecognition();
   </script>
 </body>
 </html>
