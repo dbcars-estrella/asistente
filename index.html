@@ -1,490 +1,421 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Lucía · 25 años</title>
-    <style>
-        :root { --primary: #8e44ad; --bg: #f5f3f7; --text: #2c2c2c; --bot-bubble: #ece5f3; --user-bubble: #8e44ad; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; background-color: var(--bg); color: var(--text); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-        .header { background: #ffffff; padding: 15px; text-align: center; font-weight: 600; font-size: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); z-index: 10; flex-shrink: 0; }
-        .chat-container { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; -webkit-overflow-scrolling: touch; }
-        .message { max-width: 85%; padding: 12px 16px; border-radius: 20px; font-size: 16px; line-height: 1.4; word-wrap: break-word; animation: fadeIn 0.3s ease; }
-        .user-message { background-color: var(--user-bubble); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
-        .bot-message { background-color: var(--bot-bubble); color: var(--text); align-self: flex-start; border-bottom-left-radius: 4px; }
-        
-        .controls { background: #ffffff; padding: 15px; display: flex; flex-direction: column; align-items: center; gap: 10px; box-shadow: 0 -1px 5px rgba(0,0,0,0.1); flex-shrink: 0; padding-bottom: max(15px, env(safe-area-inset-bottom)); }
-        .status { font-size: 14px; color: #666; font-weight: 500; height: 20px; }
-        
-        .mic-btn { 
-            background: #8e44ad; color: white; border: none; border-radius: 50%; width: 70px; height: 70px; 
-            display: flex; justify-content: center; align-items: center; cursor: pointer; 
-            transition: all 0.2s; box-shadow: 0 4px 15px rgba(142, 68, 173, 0.4); font-size: 30px;
-        }
-        .mic-btn:active { transform: scale(0.9); }
-        .mic-btn.listening { background: #c0392b; animation: pulse 1.5s infinite; box-shadow: 0 4px 15px rgba(192, 57, 43, 0.4); }
-        .mic-btn:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
-        
-        .input-area { display: flex; width: 100%; gap: 8px; margin-top: 5px; }
-        input[type="text"] { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 20px; font-size: 16px; outline: none; }
-        input[type="text"]:focus { border-color: var(--primary); }
-        .send-btn { background: var(--primary); color: white; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 18px; display: flex; justify-content: center; align-items: center; cursor: pointer; flex-shrink: 0; }
-        
-        .repeat-btn {
-            background: #bdc3c7; color: #333; border: none; border-radius: 15px; padding: 8px 15px; 
-            font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 5px;
-        }
-        .repeat-btn:active { transform: scale(0.95); }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Lucía · Chat</title>
+  <style>
+    :root {
+      --primary: #8e44ad;
+      --bg: #f3edf7;
+      --text: #2b2b2b;
+      --bot: #ece5f3;
+      --user: #8e44ad;
+      --line: #d9d0e0;
+      --white: #ffffff;
+    }
 
-.message .time { display: block; font-size: 11px; opacity: 0.6; margin-top: 4px; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(192, 57, 43, 0); } 100% { box-shadow: 0 0 0 0 rgba(192, 57, 43, 0); } }
-    </style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .header {
+      background: var(--white);
+      padding: 14px 16px;
+      font-weight: 700;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+      font-size: 18px;
+    }
+
+    .chat {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 12px 14px;
+      border-radius: 18px;
+      line-height: 1.45;
+      font-size: 16px;
+      word-wrap: break-word;
+      white-space: pre-wrap;
+    }
+
+    .user {
+      align-self: flex-end;
+      background: var(--user);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: var(--bot);
+      color: var(--text);
+      border-bottom-left-radius: 4px;
+    }
+
+    .controls {
+      background: var(--white);
+      padding: 12px 16px calc(16px + env(safe-area-inset-bottom));
+      box-shadow: 0 -1px 5px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .status {
+      min-height: 20px;
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+    }
+
+    .mic-btn {
+      width: 68px;
+      height: 68px;
+      border: none;
+      border-radius: 50%;
+      background: var(--primary);
+      color: white;
+      font-size: 30px;
+      box-shadow: 0 4px 14px rgba(142, 68, 173, 0.35);
+      cursor: pointer;
+      align-self: center;
+    }
+
+    .mic-btn.listening {
+      background: #d32f2f;
+      animation: pulse 1.3s infinite;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+
+    .input-row input {
+      flex: 1;
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 12px 14px;
+      font-size: 16px;
+      outline: none;
+    }
+
+    .send-btn, .repeat-btn {
+      border: none;
+      border-radius: 18px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .send-btn {
+      width: 46px;
+      height: 46px;
+      background: var(--primary);
+      color: white;
+      font-size: 18px;
+      align-self: center;
+    }
+
+    .repeat-btn {
+      background: #dfe3ea;
+      color: #222;
+      padding: 8px 12px;
+      font-size: 14px;
+      align-self: center;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.4); }
+      70% { box-shadow: 0 0 0 16px rgba(211, 47, 47, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(211, 47, 47, 0); }
+    }
+  </style>
 </head>
 <body>
-    <div class="header">Lucía · 25 años</div>
-    <div class="chat-container" id="chatContainer">
-        <div class="message bot-message">¡Hey! Soy Lucía. 25 años, de Madrid. ¿Qué tal va tu día? Cuéntame algo, lo que sea.</div>
-    </div>
-    
-    <div class="controls">
-        <div class="status" id="statusText">Toca el micrófono o escribe un mensaje</div>
-        <button class="mic-btn" id="micBtn">🎤</button>
-        
-        <div class="input-area">
-            <input type="text" id="inputText" placeholder="Escribe un mensaje...">
-            <button class="send-btn" id="sendBtn">➤</button>
-        </div>
-        
-        <button class="repeat-btn" id="repeatBtn">🔊 Probar sonido / Repetir</button>
+  <div class="header">Lucía · 25 años</div>
+
+  <div class="chat" id="chat">
+    <div class="message bot">¡Hola! Soy Lucía. Tengo 25 años y soy de Madrid. ¿Cómo va tu día?</div>
+  </div>
+
+  <div class="controls">
+    <div id="status" class="status">Listo para escuchar</div>
+    <button id="micBtn" class="mic-btn" aria-label="Micrófono">🎤</button>
+
+    <div class="input-row">
+      <input id="textInput" type="text" placeholder="Escribe algo..." />
+      <button id="sendBtn" class="send-btn" aria-label="Enviar">➤</button>
     </div>
 
-    <script>
-        // ============================================================
-        // MOTOR CONVERSACIONAL AVANZADO - LUCÍA (25 años)
-        // ============================================================
+    <button id="repeatBtn" class="repeat-btn">🔊 Repetir última respuesta</button>
+  </div>
 
-        const MEMORY_KEYS = ['user_name', 'user_age', 'user_city', 'custom_knowledge'];
-        let waitingForUserName = false;
-        let lastTopic = null;
-        let lastMood = null;
-        let conversationCount = 0;
+  <script>
+    const chat = document.getElementById('chat');
+    const statusEl = document.getElementById('status');
+    const textInput = document.getElementById('textInput');
+    const micBtn = document.getElementById('micBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const repeatBtn = document.getElementById('repeatBtn');
 
-        // ---- UTILIDADES ----
-        function setMemory(key, val) { localStorage.setItem('vc_mem_' + key, JSON.stringify(val)); }
-        function getMemory(key) { const v = localStorage.getItem('vc_mem_' + key); return v ? JSON.parse(v) : null; }
-        function normalize(s) { if(!s) return ""; return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim(); }
-        function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-        function pickRandom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+    let lastReply = '';
+    let recognition = null;
+    let listening = false;
 
-        // ---- DICCIONARIOS DE TEMAS ----
-        const TEMAS = {
-            trabajo: ['trabajo','curro','currar','jefe','jefa','oficina','empresa','reunion','proyecto','cliente','empleo','contrato','sueldo','nomina','turno'],
-            sexo:['p porno duro que me coman el coño ','coño', 'clítoris, polla mamada, sexo, oral, corto explícito, introduciendo mi polla en mi coño y tu boca comiéndome la polla hasta los huevos']
-            tecnologia: ['inteligencia artificial','ia','programar','codigo','app','aplicacion','ordenador','movil','software','hardware','internet','web','algoritmo','datos','tecnologia','chatgpt','gemini'],
-            estudios: ['estudiar','estudio','carrera','universidad','grado','master','curso','examen','clase','profesor','apuntes','tesis'],
-            sentimientos_mal: ['triste','cansado','cansada','agotado','agotada','frustrado','frustrada','estresado','estresada','mal','fatal','hundido','hundida','preocupado','preocupada','ansioso','ansiosa','deprimido','deprimida'],
-            sentimientos_bien: ['feliz','contento','contenta','genial','alegre','bien','estupendo','maravilloso','animado','animada','ilusionado','ilusionada'],
-            amor: ['novio','novia','pareja','amor','enamorado','enamorada','cita','ligar','corazon','quiero','te quiero','beso','romantico'],
-            amistad: ['amigo','amiga','amigos','amigas','colegas','gente','quedar','plan','fiesta','salir'],
-            musica: ['musica','cancion','grupo','concierto','spotify','escuchar','cantante','album','rock','pop','indie','reggaeton'],
-            cine: ['pelicula','peli','serie','netflix','hbo','cine','ver','capitulo','temporada','documental'],
-            comida: ['comida','comer','cena','almuerzo','desayuno','pizza','pasta','sushi','cocinar','restaurante','cafe','cerveza','vino'],
-            deporte: ['deporte','gym','gimnasio','correr','caminar','bici','yoga','pilates','entrenar','ejercicio'],
-            viajes: ['viaje','viajar','vacaciones','destino','playa','montaña','hotel','vuelo','avion','pais','ciudad'],
-            dinero: ['dinero','pasta','crisis','paro','alquiler','hipoteca','precio','caro','economia','pagar','deuda'],
-            futuro: ['futuro','mañana','proximo','planear','sueño','meta','objetivo','quiero ser','algun dia'],
-            familia: ['familia','madre','padre','hermano','hermana','abuelo','abuela','primo','prima','hijo','hija'],
-            salud: ['salud','medico','enfermo','enferma','dolor','cabeza','gripe','pastilla','hospital'],
-            clima: ['tiempo','clima','llueve','llover','sol','frio','calor','nieve','nublado'],
-            humor: ['chiste','risa','reir','gracioso','broma','jaja','divertido']
-        };
+    function addMessage(role, text) {
+      const div = document.createElement('div');
+      div.className = 'message ' + role;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
 
-        // ---- GENERADORES DE RESPUESTA POR TEMA ----
-        const RESPUESTAS = {
-            trabajo: [
-                'Uf, el trabajo... a veces es un poco caos, ¿no? Yo estoy en marketing digital y hay días de locos. ¿Y tú en qué andas?',
-                'Suena a que tienes lío con el curro. Cuéntame más, ¿es algo puntual o siempre es así?',
-                'El trabajo nos come a veces. Yo intento desconectar cuando salgo, aunque no siempre lo consigo.'
-            ],
-            tecnologia: [
-                'Ostras, qué interesante. La inteligencia artificial está cambiando todo, ¿no? Yo la uso un poco en el trabajo pero me pierdo con la parte técnica.',
-                'Me flipa que sepas de eso. Yo soy más de letras, la verdad. ¿Y llevas mucho tiempo con el proyecto?',
-                'La verdad es que la tecnología avanza rapidísimo. Yo me quedo alucinada con lo que se puede hacer ahora.'
-            ],
-            estudios: [
-                'Ay, estudiar... yo ya lo dejé pero a veces pienso en hacer algún curso. ¿Y tú qué estás estudiando?',
-                'Qué bien que sigas estudiando, con lo que cuesta ponerse. ¿Se te da bien o hay alguna asignatura que se te atraganta?'
-            ],
-            sentimientos_mal: [
-                'Vaya, lo siento de verdad. ¿Quieres contarme qué te pasa? A veces hablarlo, aunque sea con alguien que no conoces, ayuda.',
-                'Uf, te entiendo. Hay días que todo pesa más. Yo lo que hago es ponerme música y salir a andar un rato. ¿Tú qué sueles hacer?',
-                'Lo siento mucho. Si te sirve de algo, aquí estoy para escucharte. ¿Qué ha pasado?'
-            ],
-            sentimientos_bien: [
-                '¡Qué bien! Me alegro un montón. ¿Y qué ha pasado, si se puede saber?',
-                '¡Genial! Se nota que estás contento. Cuéntame, cuéntame.',
-                '¡Me encanta oír eso! A ver, dime qué te tiene así de contento.'
-            ],
-            amor: [
-                'Ay, el amor... tema complicado. Yo ahora mismo estoy soltera y tampoco me agobia, la verdad. ¿Y tú qué tal?',
-                'Uf, eso es un mundo. ¿Y cómo va la cosa, bien o complicado?',
-                'Qué bonito. Yo estoy en un momento de centrarme en mí, pero me alegro por ti.'
-            ],
-            amistad: [
-                'Los amigos son lo mejor, la verdad. Yo tengo un grupo de toda la vida y luego los del trabajo. ¿Y tú?',
-                'Qué bien. Yo creo que a esta edad cuesta más quedar con todos, cada uno va a su ritmo.'
-            ],
-            musica: [
-                '¡Uy, la música es mi salvación! Yo escucho mucho indie y algo de pop. Depende del día. ¿Tú qué escuchas?',
-                'Me encanta la música, la verdad. Pásame alguna recomendación si quieres, que siempre me gusta descubrir cosas nuevas.'
-            ],
-            cine: ['madre mía, estoy enganchada a las películas porno en las cuales salen parejas de hombres y mujeres y transexuales con unas pollas unas tetas y unos coños brutales. ?me gustaria aprender sexo, oral, sexo vaginal y sexo, anal. Si quieres me pongo en modo aprendizaje y me lo explicas.,
-                'Uf, estoy enganchada a una serie de misterio. Y para pelis me tira mucho el cine independiente. ¿Tienes alguna recomendación?',
-                'A mí me gusta mucho el cine, aunque reconozco que últimamente veo más series. Es más cómodo.'
-            ],
-            comida: [
-                '¡Ay, la comida! A mí me pierde la pasta, te lo digo en serio. Y el sushi tampoco lo rechazo.',
-                'Yo cocino regular, pero me gusta. Aunque cuando salgo a cenar me lo disfruto más.'
-            ],
-            deporte: [
-                'Yo voy al gimnasio tres veces por semana, aunque a veces me da una pereza... Pero luego se agradece.',
-                'Uf, el deporte. A mí me cuesta ponerme pero cuando lo hago me siento genial.'
-            ],
-            viajes: [
-                'Me encantaría viajar más. Tengo pendiente Japón y algún país del norte de Europa. ¿Tú has viajado mucho?',
-                'Ay, viajar es lo mejor. Yo el año pasado estuve de escapada y me quedé con ganas de más.'
-            ],
-            dinero: [
-                'Ya... está todo complicado, la verdad. Nos toca aguantar y apañarnos como podemos.',
-                'Uf, no me hables del dinero. El alquiler está imposible, sobre todo en las ciudades.'
-            ],
-            futuro: [
-                'Me gusta pensar en el futuro, aunque a veces me agobia un poco. ¿Tú tienes claro lo que quieres?',
-                'Yo tengo algunas metas pero voy despacio, sin prisa. ¿Y tú qué planes tienes?'
-            ],
-            familia: [
-                'La familia es la familia... A veces un lío, pero ahí están. ¿Tú te llevas bien con los tuyos?',
-                'Yo con mis padres me llevo bien, aunque a veces no me entiendan del todo. Cosas de la edad.'
-            ],
-            salud: [
-                'Uf, cuídate. Yo intento hacer vida sana aunque a veces me salto la dieta. ¿Estás mejor?',
-                'Ponte bien, ¿eh? La salud es lo primero.'
-            ],
-            clima: [
-                'Ay, el tiempo está loco. Yo ya no sé ni qué ropa ponerme.',
-                'Pues aquí hace un día raro, la verdad. ¿Y por tu zona qué tal?'
-            ],
-            humor: [
-                '¡Jajaja! Qué bueno. Me encanta que tengas ese rollo.',
-                '¡Jajaja! Ay, me has sacado una sonrisa.'
-            ]
-        };
+    function normalize(text) {
+      return (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    }
 
-        // ---- FUNCIÓN PRINCIPAL DE ANÁLISIS ----
-        function analizarMensaje(raw) {
-            const proc = normalize(raw);
-            const palabras = proc.split(/\s+/);
-            const temasDetectados = [];
-            
-            // Detectar temas por palabras clave
-            for (let tema in TEMAS) {
-                for (let palabra of TEMAS[tema]) {
-                    if (proc.includes(normalize(palabra))) {
-                        if (!temasDetectados.includes(tema)) temasDetectados.push(tema);
-                        break;
-                    }
-                }
-            }
+    function pickRandom(items) {
+      return items[Math.floor(Math.random() * items.length)];
+    }
 
-            // Detectar si es un mensaje largo (más de 8 palabras)
-            const esLargo = palabras.length > 8;
-            
-            // Detectar nombre del usuario en el mensaje
-            const nameMatch = raw.match(/(?:mi nombre es|me llamo|soy)\s+([a-zA-Záéíóúñü\s]{2,30})/i);
+    function respuestaBot(text) {
+      const t = normalize(text);
 
-            return { proc, palabras, temasDetectados, esLargo, nameMatch };
-        }
+      if (/^hola|^buenas|^hello|^hey|^ey/.test(t)) {
+        return pickRandom([
+          '¡Hola! ¿Qué tal va tu día?',
+          '¡Buenas! Cuéntame, ¿qué te pasa?',
+          '¡Hola! Estoy aquí, ¿qué quieres hablar?'
+        ]);
+      }
 
-        // ---- FUNCIÓN DE APRENDIZAJE ----
-        function extractTeaching(raw) {
-            let m1 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(.+?)\s+(?:es|son|significa|se llama)\s+(.+)/i);
-            if (m1 && m1[1] && m1[2]) return { question: normalize(m1[1]), answer: m1[2].trim() };
-            let m2 = raw.match(/(?:aprende que|aprende|te enseño que|te enseño|recuerda que)\s+(?:si te digo|cuando te diga|cuando diga)\s+(.+?)\s*[,.]?\s*(?:respondas|me digas|dime|contesta)\s+(.+)/i);
-            if (m2 && m2[1] && m2[2]) {
-                return { question: normalize(m2[1].replace(/["'«»]/g, '').trim()), answer: m2[2].replace(/["'«»]/g, '').trim() };
-            }
-            return null;
-        }
+      if (/como eres/.test(t) || /cuentame de ti|hablame de ti|quien eres|como te llamas/.test(t)) {
+        return pickRandom([
+          'Soy Lucía, tengo 25 años y soy de Madrid. Soy curiosa, cercana, sociable y me gusta escuchar a la gente. También soy un poco despistada y directa. ¿Y tú, cómo eres?',
+          'Me llamo Lucía. Me describiría como curiosa, alegre y muy habladora. También soy directa y bastante sociable. ¿Y tú cómo te definirías?',
+          'Soy Lucía, de Madrid, 25 años. Soy cercana, curiosa y me gusta aprender cosas nuevas. También necesito mi tiempo para pensar en paz. ¿Cómo te describirías tú?'
+        ]);
+      }
 
-        // ---- GENERADOR DE RESPUESTA ----
-        function generateResponse(raw) {
-            const analisis = analizarMensaje(raw);
-            const { proc, palabras, temasDetectados, esLargo, nameMatch } = analisis;
-            conversationCount++;
+      if (/como estas|que tal estas|como te encuentras/.test(t)) {
+        return pickRandom([
+          'Estoy bien, gracias por preguntar. Un poco cansada del día, pero con ganas de hablar contigo.',
+          'Estoy tranquila y bien. ¿Y tú cómo te encuentras?',
+          'Bastante bien, gracias. ¿Y tú qué tal estás?'
+        ]);
+      }
 
-            // 1. APRENDIZAJE
-            const teaching = extractTeaching(raw);
-            if (teaching) {
-                let customKnowledge = getMemory('custom_knowledge') || {};
-                customKnowledge[teaching.question] = teaching.answer;
-                setMemory('custom_knowledge', customKnowledge);
-                return 'Vale, me lo apunto: ' + teaching.question + ' es ' + teaching.answer + '. Lo recordaré.';
-            }
+      if (/nombre|te llamas/.test(t)) {
+        return 'Me llamo Lucía, encantada. ¿Y tú?';
+      }
 
-            // 2. BUSCAR EN LO APRENDIDO
-            let customKnowledge = getMemory('custom_knowledge') || {};
-            for (let key in customKnowledge) {
-                if (proc === key || proc.includes(key) || key.includes(proc)) return customKnowledge[key];
-            }
+      if (/edad|años/.test(t)) {
+        return 'Tengo 25 años. ¿Y tú?';
+      }
 
-            // 3. NOMBRES
-            if (nameMatch && nameMatch[1]) {
-                const nombre = capitalize(nameMatch[1].trim().split(' ')[0]);
-                setMemory('user_name', nombre);
-                return '¡Encantada, ' + nombre + '! ¿Y a qué te dedicas, si se puede saber?';
-            }
+      if (/donde vives|de donde eres/.test(t)) {
+        return 'Soy de Madrid. ¿Y tú de dónde eres?';
+      }
 
-            if (waitingForUserName) {
-                let possibleName = raw.trim();
-                if (possibleName.length > 1 && possibleName.length < 30 && !possibleName.includes(' ')) {
-                    setMemory('user_name', capitalize(possibleName));
-                    waitingForUserName = false;
-                    return '¡Encantada, ' + capitalize(possibleName) + '! ¿Qué tal, cuéntame algo de ti?';
-                }
-                waitingForUserName = false;
-            }
+      if (/trabajas|te dedicas|que haces/.test(t)) {
+        return 'Trabajo en marketing digital. Tiene días intensos, pero me gusta. ¿Y tú a qué te dedicas?';
+      }
 
-            if (proc.match(/(cual es mi nombre|como me llamo|sabes mi nombre)/)) {
-                const userName = getMemory('user_name');
-                if (userName) return 'Te llamas ' + userName + ', claro. No se me olvida.';
-                waitingForUserName = true;
-                return 'Pues no me lo has dicho todavía. ¿Cómo te llamas?';
-            }
-            if (proc.match(/(como te llamas|tu nombre|tienes nombre)/)) {
-                return 'Me llamo Lucía, tengo 25 años. Encantada.';
-            }
+      if (/novio|pareja|soltero|soltera/.test(t)) {
+        return 'Ahora mismo estoy soltera y bien así. ¿Y tú?';
+      }
 
-            const userName = getMemory('user_name');
-            const userCall = userName ? userName : 'tío';
+      if (/musica|cancion|playlist|artista/.test(t)) {
+        return 'Me gusta mucho la música indie y el pop. ¿Qué escuchas tú?';
+      }
 
-            // 4. SALUDOS INICIALES (solo si es un saludo corto)
-            if (palabras.length <= 4 && proc.match(/(hola|buenas|saludos|buenos dias|buenas tardes|buenas noches)/)) {
-                lastTopic = 'saludo';
-                const saludos = [
-                    '¡ hola, amor mío, te estaba esperando ansiosa con ganas de que me cuentes cómo me comería el coño y como me penetrarían hasta la saciedad y estremecida nada más de pensarloHola ' + userCall + '! ¿Qué tal va todo? Cuéntame.',
-                    '¡Hey! ¿Cómo va ese día? Cuéntame algo.',
-                    '¡Hola! ¿Qué te cuentas? Hacía rato que no hablábamos.'
-                ];
-                return pickRandom(saludos);
-            }
+      if (/serie|pelicula|cine|netflix/.test(t)) {
+        return 'Me gusta mucho el cine y las series. ¿Qué estás viendo ahora?';
+      }
 
-            // 5. PREGUNTAS DIRECTAS SOBRE LUCÍA
-            if (proc.match(/(a que te dedicas|en que trabajas|trabajas)/)) {
-                return 'Trabajo en marketing digital, en una agencia pequeña. Hay días de caos pero me gusta. ¿Y tú a qué te dedicas?';
-            }
-            if (proc.match(/(que edad tienes|cuantos anos tienes)/)) {
-                return 'Tengo 25 años. En nada los 26, que ya me va tocando.';
-            }
-            if (proc.match(/(donde vives|de donde eres)/)) {
-                return 'Soy de Madrid, y vivo aquí en un piso compartido con una amiga. El alquiler está imposible, ya sabes.';
-            }
-            if (proc.match(/(estudiaste|que estudiaste|carrera)/)) {
-                return 'Estudié Publicidad y Relaciones Públicas. Ahora estoy pensando en hacer algún curso más creativo.';
-            }
-            if (proc.match(/(estas soltera|tienes novio|tienes pareja)/)) {
-                return 'Soltera ahora mismo. Y bueno, tampoco me agobia. Prefiero estar bien conmigo misma antes que con cualquiera.';
-            }
-            if (proc.match(/(que musica te gusta|que escuchas)/)) {
-                return 'Escucho mucho indie, algo de pop y depende del día. ¿Tú qué música escuchas?';
-            }
-            if (proc.match(/(que series ves|que peliculas te gustan)/)) {
-                return 'Estoy enganchada a una serie de misterio. Y para pelis me tira el cine independiente. ¿Alguna recomendación?';
-            }
-            if (proc.match(/(tienes mascota|te gustan los animales)/)) {
-                return 'Me encantaría tener un gato, pero como vivo de alquiler no me dejan. De momento me conformo con los de mis amigas.';
-            }
+      if (/viaje|vacaciones|playa|montana/.test(t)) {
+        return 'Me encantaría viajar más. ¿Tú has viajado mucho?';
+      }
 
-            // 6. RESPUESTA BASADA EN EL TEMA DETECTADO
-            if (temasDetectados.length > 0) {
-                // Priorizar sentimientos (son los más importantes)
-                const prioridad = ['sentimientos_mal','sentimientos_bien','trabajo','tecnologia','amor','dinero','salud','estudios','musica','cine','comida','deporte','viajes','amistad','familia','futuro','clima','humor'];
-                
-                for (let temaPrioritario of prioridad) {
-                    if (temasDetectados.includes(temaPrioritario) && RESPUESTAS[temaPrioritario]) {
-                        lastTopic = temaPrioritario;
-                        
-                        // Si el mensaje es largo, añadir una coletilla de seguimiento
-                        if (esLargo) {
-                            let respuesta = pickRandom(RESPUESTAS[temaPrioritario]);
-                            const coletillas = [
-                                ' Cuéntame más, que me has dejado con la intriga.',
-                                ' ¿Y cómo te hace sentir eso?',
-                                ' Me interesa mucho lo que me cuentas.',
-                                ' ¿Y qué piensas hacer?'
-                            ];
-                            return respuesta + pickRandom(coletillas);
-                        }
-                        return pickRandom(RESPUESTAS[temaPrioritario]);
-                    }
-                }
-            }
+      if (/deporte|gimnasio|ejercicio/.test(t)) {
+        return 'Intento ir al gimnasio con regularidad. ¿Tú haces deporte?';
+      }
 
-            // 7. RESPUESTAS DE SEGUIMIENTO (si es largo pero no detectamos tema claro)
-            if (esLargo) {
-                lastTopic = 'general_largo';
-                const respuestasLargas = [
-                    'Vaya, veo que tienes mucho que contar. Me gusta escucharte, de verdad. ¿Y tú cómo llevas todo eso?',
-                    'Entiendo lo que me dices. A veces las cosas se complican, ¿no? ¿Y qué es lo que más te preocupa ahora mismo?',
-                    'Me parece muy interesante lo que cuentas. Yo creo que hay que ir paso a paso, sin agobiarse. ¿Tú qué opinas?',
-                    'Ostras, pues suena a que tienes un lío importante. Si quieres desahogarte, aquí estoy. ¿Qué es lo que más te ronda la cabeza?'
-                ];
-                return pickRandom(respuestasLargas);
-            }
+      if (/gracias/.test(t)) {
+        return 'De nada. ¿Qué más quieres hablar?';
+      }
 
-            // 8. RESPUESTAS CORTAS GENÉRICAS
-            if (palabras.length <= 3) {
-                const cortas = [
-                    'Cuéntame más, que me dejas con la intriga.',
-                    '¿Y eso? A ver, explícame un poco más.',
-                    'Mmm, interesante. Sigue, sigue.',
-                    '¿En serio? Y qué más.'
-                ];
-                return pickRandom(cortas);
-            }
+      if (/te quiero|me gustas|eres genial/.test(t)) {
+        return '¡Qué bonito! Yo también te tengo cariño. ¿Qué más quieres contarme?';
+      }
 
-            // 9. HORA
-            if (proc.includes('hora')) {
-                const d = new Date();
-                return 'Son las ' + d.getHours() + ':' + String(d.getMinutes()).padStart(2,'0') + '. ¿Tienes prisa o seguimos charlando?';
-            }
+      if (/porque|que significa|explica|explicame/.test(t)) {
+        return 'Claro. ¿Qué quieres que te explique exactamente?';
+      }
 
-            // 10. CARIÑO
-            if (proc.match(/(te quiero|te adoro|me gustas)/)) {
-                return '¡Ay, qué bonito! Yo también te tengo cariño, ' + userCall + '. Eres un encanto.';
-            }
+      if (t.length <= 3) {
+        return pickRandom([
+          'Cuéntame más, que me interesa.',
+          '¿Y eso? ¿Qué más?',
+          'Sigue, te escucho.'
+        ]);
+      }
 
-            // 11. FALLBACK INTELIGENTE (repite parte de lo que dijo el usuario)
-            const fallbacks = [
-                'A ver si te entiendo... ¿me lo explicas con otras palabras?',
-                'Pues no sé muy bien qué decirte a eso. ¿Cambiamos de tema o me cuentas más?',
-                'No te pillo del todo, la verdad. ¿A qué te refieres exactamente?',
-                'Uf, eso me pilla un poco fuera de juego. ¿Y tú qué opinas?'
-            ];
-            return pickRandom(fallbacks);
-        }
-        
-        // ---- VOZ ----
-        let voices = [];
-        function loadVoices() { voices = window.speechSynthesis.getVoices(); }
-        if (window.speechSynthesis) { window.speechSynthesis.onvoiceschanged = loadVoices; loadVoices(); }
-        
-        let isSpeaking = false;
-        let lastSpokenText = '';
+      return pickRandom([
+        'Interesante. Cuéntame más sobre eso.',
+        'Me gusta eso. ¿Qué más te está pasando?',
+        'Entiendo. ¿Quieres hablar más de ello?',
+        'Vaya, eso suena interesante. ¿Qué más quieres contarme?'
+      ]);
+    }
 
-        function speak(text) {
-            if (!window.speechSynthesis) return;
-            window.speechSynthesis.cancel(); 
-            isSpeaking = true;
-            lastSpokenText = text;
-            document.getElementById('statusText').textContent = 'Hablando...';
-            
-            setTimeout(() => {
-                const u = new SpeechSynthesisUtterance(text);
-                u.lang = 'es-ES'; 
-                u.rate = 1.0; 
-                let selectedVoice = voices.find(v => v.lang.startsWith('es') && v.name.toLowerCase().includes('female'));
-                if (!selectedVoice) selectedVoice = voices.find(v => v.lang.startsWith('es'));
-                if (selectedVoice) u.voice = selectedVoice;
-                
-                u.onend = () => {
-                    isSpeaking = false;
-                    document.getElementById('statusText').textContent = 'Toca el micrófono o escribe un mensaje';
-                };
-                u.onerror = () => {
-                    isSpeaking = false;
-                    document.getElementById('statusText').textContent = 'Error de audio.';
-                };
-                
-                window.speechSynthesis.speak(u);
-                window.speechSynthesis.resume();
-            }, 600);
-        }
-        
-        // ---- RECONOCIMIENTO DE VOZ ----
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        let recognition = null;
-        let isListening = false;
-        let transcriptText = '';
+    function sendText(value) {
+      const clean = (value || '').trim();
+      if (!clean) return;
 
-        if (SpeechRecognition) {
-            recognition = new SpeechRecognition(); 
-            recognition.lang = 'es-ES'; 
-            recognition.interimResults = false; 
-            recognition.maxAlternatives = 1;
-            
-            recognition.onstart = () => { isListening = true; document.getElementById('micBtn').classList.add('listening'); document.getElementById('statusText').textContent = 'Escuchando...'; };
-            recognition.onresult = (event) => { transcriptText = event.results[0][0].transcript; };
-            recognition.onerror = (event) => { isListening = false; document.getElementById('micBtn').classList.remove('listening'); document.getElementById('statusText').textContent = 'Error. Toca para reintentar'; };
-            recognition.onend = () => { 
-                isListening = false; 
-                document.getElementById('micBtn').classList.remove('listening'); 
-                if (transcriptText && transcriptText.trim() !== '') {
-                    sendMessage(transcriptText);
-                    transcriptText = '';
-                } else {
-                    document.getElementById('statusText').textContent = 'No te he oído. Toca el micro o escribe.';
-                }
-            };
-        } else { 
-            document.getElementById('micBtn').disabled = true; 
-            document.getElementById('statusText').textContent = 'Micrófono no soportado';
-        }
-        
-        document.getElementById('micBtn').addEventListener('click', () => {
-            if (!recognition || isSpeaking) return;
-            if (isListening) recognition.stop();
-            else { window.speechSynthesis.cancel(); recognition.start(); }
+      addMessage('user', clean);
+      const answer = respuestaBot(clean);
+      lastReply = answer;
+      addMessage('bot', answer);
+      speak(answer);
+    }
+
+    function speak(text) {
+      if (!('speechSynthesis' in window)) {
+        statusEl.textContent = 'La voz no está disponible en este navegador';
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'es-ES';
+      utterance.rate = 1;
+
+      const voices = window.speechSynthesis.getVoices();
+      const voice = voices.find(v => v.lang && v.lang.startsWith('es')) || voices[0];
+      if (voice) utterance.voice = voice;
+
+      utterance.onstart = () => {
+        statusEl.textContent = 'Hablando...';
+      };
+
+      utterance.onend = () => {
+        statusEl.textContent = 'Listo para escuchar';
+      };
+
+      utterance.onerror = () => {
+        statusEl.textContent = 'No se pudo reproducir la voz';
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }
+
+    function initRecognition() {
+      const Rec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!Rec) {
+        statusEl.textContent = 'Tu navegador no soporta reconocimiento de voz';
+        micBtn.disabled = true;
+        micBtn.title = 'No soportado';
+        return;
+      }
+
+      recognition = new Rec();
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        listening = true;
+        micBtn.classList.add('listening');
+        statusEl.textContent = 'Escuchando...';
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (transcript) sendText(transcript);
+      };
+
+      recognition.onerror = (event) => {
+        listening = false;
+        micBtn.classList.remove('listening');
+        statusEl.textContent = 'No se pudo usar el micrófono. Comprueba permisos.';
+      };
+
+      recognition.onend = () => {
+        listening = false;
+        micBtn.classList.remove('listening');
+        statusEl.textContent = 'Listo para escuchar';
+      };
+    }
+
+    micBtn.addEventListener('click', () => {
+      if (!recognition) {
+        statusEl.textContent = 'Tu navegador no soporta reconocimiento de voz';
+        return;
+      }
+
+      if (listening) {
+        recognition.stop();
+        return;
+      }
+
+      try {
+        recognition.start();
+      } catch (error) {
+        statusEl.textContent = 'El micrófono ya estaba activo';
+      }
+    });
+
+    sendBtn.addEventListener('click', () => {
+      sendText(textInput.value);
+      textInput.value = '';
+    });
+
+    textInput.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        sendText(textInput.value);
+        textInput.value = '';
+      }
+    });
+
+    repeatBtn.addEventListener('click', () => {
+      if (lastReply) speak(lastReply);
+      else speak('Hola, soy Lucía. ¿Qué tal?');
+    });
+
+    // Comprobación rápida de micrófono, útil para depurar en iPhone/Chrome/Safari
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(() => {
+          console.log('Micrófono permitido');
+        })
+        .catch(() => {
+          statusEl.textContent = 'Permite el acceso al micrófono en el navegador';
         });
+    }
 
-        document.getElementById('repeatBtn').addEventListener('click', () => {
-            if (lastSpokenText) speak(lastSpokenText);
-            else speak('Hola, soy Lucía. ¿Qué tal?');
-        });
-        
-        // ---- UI ----
-        const chatContainer = document.getElementById('chatContainer');
-        const inputText = document.getElementById('inputText');
-        
-        function addMessage(sender, text) { 
-            const div = document.createElement('div'); 
-            div.className = 'message ' + (sender === 'Tú' ? 'user-message' : 'bot-message'); 
-            div.textContent = text; 
-            chatContainer.appendChild(div); 
-            chatContainer.scrollTop = chatContainer.scrollHeight; 
-        }
-        
-        function sendMessage(text) { 
-            const cleanText = text.trim();
-            if (!cleanText) return;
-            addMessage('Tú', cleanText); 
-            const res = generateResponse(cleanText); 
-            addMessage('Bot', res); 
-            speak(res); 
-        }
-
-        document.getElementById('sendBtn').addEventListener('click', () => {
-            sendMessage(inputText.value);
-            inputText.value = '';
-        });
-
-        inputText.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage(inputText.value);
-                inputText.value = '';
-            }
-        });
-    </script>
+    initRecognition();
+  </script>
 </body>
 </html>
