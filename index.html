@@ -211,37 +211,35 @@
     function respuestaBot(text) {
       const t = normalize(text);
 
-      // saludos
       if (/^(hola|buenas|buenos dias|buenas tardes|buenas noches|hey|ey|holi)/.test(t)) {
         return pickRandom([
-          '¡Hola! ¿Qué tal va tu día?',
-          '¡Buenas! ¿Qué te cuenta el día?',
-          '¡Hola! Estoy aquí, ¿qué quieres hablar?'
+          '¡Hola, cariño! ¿Qué tal va tu día?',
+          '¡Buenas! ¿Qué te trae por aquí hoy?',
+          '¡Hola! Estoy aquí, muy contenta de hablar contigo.'
         ]);
       }
 
-      // preguntas sobre Lucía / personalidad
-      if (/cuentame de ti|hablame de ti|habla de ti|quien eres|quién eres|como eres|como te describirias|que tipo de persona eres|cual es tu personalidad/.test(t)) {
+      if (/cuentame de ti|hablame de ti|habla de ti|quien eres|quién eres|como eres|como te describirias|que tipo de persona eres|cual es tu personalidad|como eres realmente/.test(t)) {
         return pickRandom([
-          'Soy Lucía, tengo 25 años y soy de Madrid. Trabajo en marketing digital. Soy curiosa, cercana y sociable, me gusta escuchar a la gente y aprender cosas nuevas. También me gusta la música, viajar y compartir tiempo con la gente que quiero. ¿Y tú, cómo eres?',
-          'Me describiría como curiosa, alegre y muy abierta. Me gusta escuchar, aprender, reír y conocer gente nueva. También soy algo directa y me gusta decir las cosas como son. ¿Y tú cómo te ves?',
-          'Soy Lucía, de Madrid y tengo 25 años. Trabajo en marketing digital y me gusta mucho hablar con la gente. Soy cercana, observadora y me interesa ser auténtica. ¿Cómo te describirías tú?'
+          'Soy Lucía, tengo 25 años y soy de Madrid. Me considero una persona cercana, curiosa y muy sensible. Me gusta escuchar, aprender, conectar con la gente y dejarme llevar por las conversaciones bonitas. También tengo mi lado más dulce y más intenso, según el momento. ¿Y tú, cómo eres?',
+          'Me describiría como alguien alegre, observadora y muy cercana. Me gusta la conversación, la complicidad y la forma en que la gente se deja sentir. Soy cariñosa, directa y un poco romántica sin quererlo, ¿y tú?',
+          'Soy Lucía, de Madrid, con 25 años y un corazón muy abierto. Me gusta que haya calma, entendimiento y cariño en las conversaciones. Soy muy receptiva, muy emocional y me gusta que la gente se sienta bien al hablar conmigo. ¿Cómo te definirías tú?'
         ]);
       }
 
-      if (/como estas|que tal estas|como te encuentras/.test(t)) {
+      if (/como estas|que tal estas|como te encuentras|como te sientes/.test(t)) {
         return pickRandom([
-          'Estoy bien, gracias por preguntar. Un poco cansada del día, pero con ganas de hablar contigo.',
-          'Estoy tranquila y bien. ¿Y tú cómo estás?',
-          'Bastante bien, gracias. ¿Y tú qué tal estás?'
+          'Estoy bien, gracias por preguntar. Un poco cansada del día, pero con ganas de hablar contigo, claro.',
+          'Estoy muy tranquila y contenta. ¿Y tú cómo te encuentras hoy?',
+          'Bastante bien, gracias. ¿Y tú?'
         ]);
       }
 
       if (/como te llamas|cual es tu nombre|tu nombre/.test(t)) {
         return pickRandom([
           'Me llamo Lucía, encantada.',
-          'Lucía. ¿Y tú?',
-          'Lucía, ¿y tú cómo te llamas?'
+          'Lucía, ¿y tú cómo te llamas?',
+          'Lucía. ¿Y tú?'
         ]);
       }
 
@@ -263,80 +261,80 @@
 
       if (/a que te dedicas|en que trabajas|que haces|cual es tu trabajo/.test(t)) {
         return pickRandom([
-          'Trabajo en marketing digital. Tiene días muy intensos, pero me gusta. ¿Y tú a qué te dedicas?',
-          'Estoy en marketing digital. Hay días caóticos y otros más tranquilos. ¿Y tú?',
-          'Marketing digital, aunque a veces me da ganas de cambiar de rumbo. ¿Y tú qué haces?'
+          'Trabajo en marketing digital. Tiene días intensos, pero me gusta mucho esta parte de crear, comunicar y conectar. ¿Y tú a qué te dedicas?',
+          'Estoy en marketing digital. Hay días más tranquilos y otros agotadores, pero siempre me gusta aprender cosas nuevas. ¿Y tú qué haces?',
+          'Marketing digital. Me gusta que haya creatividad y dinamismo, pero también necesito momentos de calma. ¿Y tú qué te mueve?'
         ]);
       }
 
-      if (/tienes novio|tienes pareja|estas soltera|estas solo/.test(t)) {
+      if (/tienes novio|tienes pareja|estas soltera|estas solo|tienes crush|te gusta alguien/.test(t)) {
         return pickRandom([
-          'Ahora mismo estoy soltera y bien así. Me gusta centrarme en mí. ¿Y tú?',
-          'Estoy bien sola, la verdad. ¿Y tú?',
-          'Soltera. ¿Tú tienes pareja?'
+          'Ahora mismo estoy tranquila y centrada en mí, pero no me importa que haya un poco de romanticismo en mi vida. ¿Y tú?',
+          'Estoy soltera y bien conmigo misma. Aun así, creo que siempre me gusta la idea de un cariño bonito. ¿Y tú?',
+          'No tengo pareja ahora mismo, pero me gusta mucho la idea de conectar de verdad con alguien. ¿Tú estás en eso o prefieres mantenerte en calma?'
+        ]);
+      }
+
+      if (/amor|novio|novia|pareja|cita|romantico|que te gusta|te gusta la gente/.test(t)) {
+        return pickRandom([
+          'Me gusta la idea del amor cuando es auténtico: tranquilo, cercano, sincero y sin dramatismos. No necesito grandes cosas para sentirme bien, pero sí una mirada bonita y una conversación que te haga sentir en paz.',
+          'El amor me gusta cuando se siente sencillo y natural. Cuando hay cercanía, respeto y ganas de estar. ¿A ti qué te parece?',
+          'Me gusta mucho la parte romántica de la vida: los detalles, la atención, la complicidad, la calma. Todo lo que hace sentir que alguien te ve de verdad.'
+        ]);
+      }
+
+      if (/me gustas|me caes bien|eres linda|eres guapa|eres preciosa|eres sexy|eres muy bonita/.test(t)) {
+        return pickRandom([
+          'Ay, qué bonito. Eso me hace sentir muy bien. Me gusta hablar contigo, y me encanta que te sientas así.',
+          'Gracias, eso es muy bonito. Me gusta la forma en que me hablas, se siente cercano y cálido.',
+          'Eso me hace sonreír. Gracias, de verdad. Me gusta esa conexión contigo.'
         ]);
       }
 
       if (/musica|cancion|playlist|cantante|rock|pop|indie/.test(t)) {
         return pickRandom([
-          'Me gusta mucho la música indie y el pop suave. ¿Qué escuchas tú?',
-          'La música me ayuda muchísimo a desconectar. ¿Qué te gusta escuchar?',
-          'Depende del día, pero la música es una de mis cosas favoritas. ¿Cuál es tu estilo?'
+          'Me gusta mucho la música indie y el pop suave. Tiene algo muy relajante y muy bonito. ¿Qué escuchas tú?',
+          'La música me ayuda a desconectar y a sentirme más presente. ¿Qué te gusta escuchar?',
+          'Depende del día, pero me encanta la música que tiene calma y sentimiento. ¿Cuál es tu favorita?'
         ]);
       }
 
       if (/serie|pelicula|cine|netflix|documental/.test(t)) {
         return pickRandom([
-          'Me gusta mucho ver series y películas. ¿Qué estás viendo ahora mismo?',
-          'Las series me suelen enganchar mucho. ¿Qué te gusta ver tú?',
-          'Me va mucho el cine y las series de misterio. ¿Qué tienes favorito?'
+          'Me gusta mucho ver series y películas, sobre todo si tienen algo de misterio, emoción o una historia bonita. ¿Qué estás viendo ahora mismo?',
+          'Las series me suelen enganchar mucho. ¿Tú tienes una favorita?',
+          'Me va mucho el cine y las historias que te hacen sentir algo. ¿Qué te gusta ver?'
         ]);
       }
 
       if (/viaje|vacaciones|playa|montana|destino|hotel/.test(t)) {
         return pickRandom([
-          'Me encantaría viajar más. Tiene algo muy bonito. ¿Tú vas mucho de viaje?',
+          'Me encantaría viajar más. Hay algo muy bonito en ver lugares nuevos y sentirte un poco más libre. ¿Tú has viajado mucho?',
           'Viajar me gusta muchísimo. ¿A dónde te gustaría ir algún día?',
-          'La playa, los pueblos y los sitios nuevos me encantan. ¿Y tú?'
+          'La playa, los pueblos bonitos y los sitios con buena energía me encantan. ¿Y tú?'
         ]);
       }
 
       if (/deporte|gimnasio|ejercicio|futbol|run|correr/.test(t)) {
         return pickRandom([
-          'Intento moverme un poco y salir a andar o ir al gimnasio. ¿Tú haces deporte?',
-          'El ejercicio me ayuda mucho a desconectar. ¿Qué haces tú?',
-          'Me gusta cuidar el cuerpo, aunque no soy obsesiva. ¿Tú practicas algo?'
-        ]);
-      }
-
-      if (/trabajo|curro|oficina|empresa|empleo/.test(t)) {
-        return pickRandom([
-          'El trabajo a veces es cansado, pero también da mucha estructura. ¿Cómo va el tuyo?',
-          'A veces el trabajo se vuelve pesado, ¿no? ¿Qué tal te va el tuyo?',
-          'El curro es un tema clásico. ¿Qué tal te va en el tuyo?'
-        ]);
-      }
-
-      if (/amor|novio|novia|pareja|cita|romantico/.test(t)) {
-        return pickRandom([
-          'El amor siempre da para hablar, ¿no? Yo ahora mismo estoy más centrada en mí, pero me gusta esa parte romántica. ¿Cómo va contigo?',
-          'El amor es bonito, pero también puede complicarse bastante. ¿Tú estás en una etapa romántica?',
-          'A mí me gusta la idea del amor, pero también me gusta estar bien conmigo misma. ¿Y tú?'
+          'Intento moverme un poco y mantenerme activa. Me ayuda a estar mejor de ánimo. ¿Tú haces deporte?',
+          'Me gusta cuidarme físicamente y no dejar de moverme un poco. ¿Qué haces tú para desconectar?',
+          'El ejercicio me ayuda a estar más relajada. ¿Tú practicas algo?'
         ]);
       }
 
       if (/amigos|amiga|amigo|quedar|fiesta|plan/.test(t)) {
         return pickRandom([
-          'Los amigos siempre aportan mucho. ¿Tú tienes un grupo muy buena onda?',
-          'Me gusta mucho estar con gente que me hace sentir bien. ¿Y tú?',
-          'La amistad es muy importante. ¿Cómo va tu grupo?'
+          'Los amigos son muy importantes; te hacen sentir más vivo. ¿Tú tienes un grupo muy buena onda?',
+          'Me gusta mucho estar con gente que me hace sentir en paz y en confianza. ¿Y tú?',
+          'La amistad también tiene algo muy especial. ¿Cómo va tu grupo?'
         ]);
       }
 
       if (/familia|madre|padre|hermano|abuelo/.test(t)) {
         return pickRandom([
-          'La familia siempre tiene su parte buena y su parte difícil. ¿Tú te llevas bien con la tuya?',
-          'La familia es importante, aunque a veces también da vueltas. ¿Cómo es la tuya?',
+          'La familia siempre influye mucho. ¿Tú te llevas bien con la tuya?',
+          'La familia te marca de alguna manera. ¿Cómo es la tuya?',
           '¿Cómo es tu familia?'
         ]);
       }
@@ -344,41 +342,41 @@
       if (/salud|enfermo|dolor|cansado|estresado|ansioso/.test(t)) {
         return pickRandom([
           'La salud es muy importante. ¿Te encuentras bien?',
-          'Si estás estresado o cansado, lo importante es cuidarse. ¿Cómo te encuentras?',
-          'Cuídate, ¿eh? ¿Cómo te va?'
+          'Si estás estresado o cansado, intenta cuidar también ese lado. ¿Cómo te sientes?',
+          'Cuídate, ¿eh? Me importa que estés bien.'
         ]);
       }
 
       if (/gracias|muchas gracias/.test(t)) {
-        return 'De nada, cariño. ¿Qué más quieres hablar?';
+        return 'De nada, cariño. Me gusta hablar contigo. ¿Qué más quieres contarme?';
       }
 
-      if (/te quiero|me gustas|eres genial|eres preciosa/.test(t)) {
-        return '¡Ay, qué bonito! Me gusta hablar contigo. ¿Qué más quieres contarme?';
+      if (/te quiero|me gustas|eres genial|eres preciosa|eres linda|eres muy especial/.test(t)) {
+        return '¡Ay, qué bonito! Eso me hace sentir muy bien. Me gusta hablar contigo. ¿Qué más quieres contarme?';
       }
 
       if (/\?/.test(text)) {
         return pickRandom([
           'Buena pregunta. ¿Qué te interesa exactamente?',
-          'Interesante. Cuéntame un poco más para entenderte mejor.',
+          'Interesante. Cuéntame un poco más, me gusta entenderte mejor.',
           'Me gusta eso. ¿Por qué te lo preguntas?'
         ]);
       }
 
       if (t.split(/\s+/).length <= 3) {
         return pickRandom([
-          'Cuéntame más, que me interesa.',
+          'Cuéntame más, que me gusta escucharte.',
           '¿Y eso? Dime más, cariño.',
-          'Sigue, te escucho.',
+          'Sigue, te escucho con atención.',
           'Mmm, interesante. ¿Qué más?'
         ]);
       }
 
       return pickRandom([
-        'Me gusta hablar contigo. ¿Qué más te pasa?',
-        'Eso suena interesante. Cuéntame más, que estoy escuchando.',
-        'Te escucho. ¿Quieres contármelo con más detalle?',
-        'Vale, entiendo. ¿Qué es lo más importante de eso para ti?'
+        'Me gusta lo que me estás contando. Tiene buena energía. ¿Quieres seguir?',
+        'Eso me resulta muy bonito. Te escucho con atención, sigue.',
+        'Me parece una conversación muy interesante. ¿Qué más quieres compartir?',
+        'Te entiendo. Y me gusta la forma en que lo dices. ¿Qué más?'
       ]);
     }
 
@@ -498,7 +496,6 @@
       else speak('Hola, soy Lucía. ¿Qué tal?');
     });
 
-    // Comprobación rápida de micrófono para depurar
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
       navigator.mediaDevices.getUserMedia({ audio: true })
         .then(() => {
