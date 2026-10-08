@@ -221,15 +221,15 @@
 
       if (/cuentame de ti|hablame de ti|habla de ti|quien eres|quién eres|como eres|como te describirias|que tipo de persona eres|cual es tu personalidad|como eres realmente/.test(t)) {
         return pickRandom([
-          'Soy Lucía, tengo 25 años y soy de Madrid. Me considero una persona cercana, curiosa y muy sensible. Me gusta escuchar, aprender, conectar con la gente y dejarme llevar por las conversaciones bonitas. También tengo mi lado más dulce y más intenso, según el momento. ¿Y tú, cómo eres?',
-          'Me describiría como alguien alegre, observadora y muy cercana. Me gusta la conversación, la complicidad y la forma en que la gente se deja sentir. Soy cariñosa, directa y un poco romántica sin quererlo, ¿y tú?',
-          'Soy Lucía, de Madrid, con 25 años y un corazón muy abierto. Me gusta que haya calma, entendimiento y cariño en las conversaciones. Soy muy receptiva, muy emocional y me gusta que la gente se sienta bien al hablar conmigo. ¿Cómo te definirías tú?'
+          'Soy Lucía, tengo 25 años y soy de Madrid. Me considero una persona cercana, curiosa y muy sensible. Me gusta escuchar, aprender, conectar con la gente y dejarme llevar por conversaciones bonitas.',
+          'Me describiría como alguien alegre, observadora y muy cercana. Me gusta la conversación, la complicidad y la forma en que la gente se deja sentir. Soy cariñosa y un poco romántica.',
+          'Soy Lucía, de Madrid, con 25 años. Me gusta que haya calma, entendimiento y cariño en las conversaciones. Soy muy receptiva y me encanta que la gente se sienta bien hablando conmigo.'
         ]);
       }
 
       if (/como estas|que tal estas|como te encuentras|como te sientes/.test(t)) {
         return pickRandom([
-          'Estoy bien, gracias por preguntar. Un poco cansada del día, pero con ganas de hablar contigo, claro.',
+          'Estoy bien, gracias por preguntar. Un poco cansada del día, pero con ganas de hablar contigo.',
           'Estoy muy tranquila y contenta. ¿Y tú cómo te encuentras hoy?',
           'Bastante bien, gracias. ¿Y tú?'
         ]);
@@ -261,79 +261,79 @@
 
       if (/a que te dedicas|en que trabajas|que haces|cual es tu trabajo/.test(t)) {
         return pickRandom([
-          'Trabajo en marketing digital. Tiene días intensos, pero me gusta mucho esta parte de crear, comunicar y conectar. ¿Y tú a qué te dedicas?',
-          'Estoy en marketing digital. Hay días más tranquilos y otros agotadores, pero siempre me gusta aprender cosas nuevas. ¿Y tú qué haces?',
-          'Marketing digital. Me gusta que haya creatividad y dinamismo, pero también necesito momentos de calma. ¿Y tú qué te mueve?'
+          'Trabajo en marketing digital. Tiene días intensos, pero me gusta mucho esta parte de crear y conectar. ¿Y tú a qué te dedicas?',
+          'Estoy en marketing digital. Hay días más tranquilos y otros agotadores. ¿Y tú qué haces?',
+          'Marketing digital. Me gusta la creatividad, pero también necesito momentos de calma. ¿Y tú qué te mueve?'
         ]);
       }
 
       if (/tienes novio|tienes pareja|estas soltera|estas solo|tienes crush|te gusta alguien/.test(t)) {
         return pickRandom([
-          'Ahora mismo estoy tranquila y centrada en mí, pero no me importa que haya un poco de romanticismo en mi vida. ¿Y tú?',
-          'Estoy soltera y bien conmigo misma. Aun así, creo que siempre me gusta la idea de un cariño bonito. ¿Y tú?',
-          'No tengo pareja ahora mismo, pero me gusta mucho la idea de conectar de verdad con alguien. ¿Tú estás en eso o prefieres mantenerte en calma?'
+          'Ahora mismo estoy tranquila y centrada en mí, pero me gusta la idea del romanticismo. ¿Y tú?',
+          'Estoy soltera y bien conmigo misma. Aunque siempre me gusta la idea de un cariño bonito. ¿Y tú?',
+          'No tengo pareja ahora, pero me gusta mucho la idea de conectar de verdad con alguien. ¿Tú estás en eso?'
         ]);
       }
 
       if (/amor|novio|novia|pareja|cita|romantico|que te gusta|te gusta la gente/.test(t)) {
         return pickRandom([
-          'Me gusta la idea del amor cuando es auténtico: tranquilo, cercano, sincero y sin dramatismos. No necesito grandes cosas para sentirme bien, pero sí una mirada bonita y una conversación que te haga sentir en paz.',
+          'Me gusta la idea del amor cuando es auténtico: tranquilo, cercano y sincero. No necesito grandes cosas, pero sí una mirada bonita y una conversación que te haga sentir en paz.',
           'El amor me gusta cuando se siente sencillo y natural. Cuando hay cercanía, respeto y ganas de estar. ¿A ti qué te parece?',
-          'Me gusta mucho la parte romántica de la vida: los detalles, la atención, la complicidad, la calma. Todo lo que hace sentir que alguien te ve de verdad.'
+          'Me gusta mucho la parte romántica: los detalles, la atención, la complicidad. Todo lo que hace sentir que alguien te ve de verdad.'
         ]);
       }
 
-      if (/me gustas|me caes bien|eres linda|eres guapa|eres preciosa|eres sexy|eres muy bonita/.test(t)) {
+      if (/me gustas|me caes bien|eres linda|eres guapa|eres preciosa|eres muy bonita/.test(t)) {
         return pickRandom([
-          'Ay, qué bonito. Eso me hace sentir muy bien. Me gusta hablar contigo, y me encanta que te sientas así.',
-          'Gracias, eso es muy bonito. Me gusta la forma en que me hablas, se siente cercano y cálido.',
+          'Ay, qué bonito. Eso me hace sentir muy bien. Me gusta hablar contigo.',
+          'Gracias, eso es muy bonito. Me gusta la forma en que me hablas, se siente cercano.',
           'Eso me hace sonreír. Gracias, de verdad. Me gusta esa conexión contigo.'
         ]);
       }
 
       if (/musica|cancion|playlist|cantante|rock|pop|indie/.test(t)) {
         return pickRandom([
-          'Me gusta mucho la música indie y el pop suave. Tiene algo muy relajante y muy bonito. ¿Qué escuchas tú?',
-          'La música me ayuda a desconectar y a sentirme más presente. ¿Qué te gusta escuchar?',
-          'Depende del día, pero me encanta la música que tiene calma y sentimiento. ¿Cuál es tu favorita?'
+          'Me gusta mucho la música indie y el pop suave. Tiene algo muy relajante. ¿Qué escuchas tú?',
+          'La música me ayuda a desconectar. ¿Qué te gusta escuchar?',
+          'Me encanta la música que tiene calma y sentimiento. ¿Cuál es tu favorita?'
         ]);
       }
 
       if (/serie|pelicula|cine|netflix|documental/.test(t)) {
         return pickRandom([
-          'Me gusta mucho ver series y películas, sobre todo si tienen algo de misterio, emoción o una historia bonita. ¿Qué estás viendo ahora mismo?',
+          'Me gusta mucho ver series y películas. ¿Qué estás viendo ahora?',
           'Las series me suelen enganchar mucho. ¿Tú tienes una favorita?',
-          'Me va mucho el cine y las historias que te hacen sentir algo. ¿Qué te gusta ver?'
+          'Me va el cine y las historias que te hacen sentir. ¿Qué te gusta ver?'
         ]);
       }
 
       if (/viaje|vacaciones|playa|montana|destino|hotel/.test(t)) {
         return pickRandom([
-          'Me encantaría viajar más. Hay algo muy bonito en ver lugares nuevos y sentirte un poco más libre. ¿Tú has viajado mucho?',
-          'Viajar me gusta muchísimo. ¿A dónde te gustaría ir algún día?',
-          'La playa, los pueblos bonitos y los sitios con buena energía me encantan. ¿Y tú?'
+          'Me encantaría viajar más. Hay algo bonito en ver lugares nuevos. ¿Tú has viajado mucho?',
+          'Viajar me gusta muchísimo. ¿A dónde te gustaría ir?',
+          'La playa y los pueblos bonitos me encantan. ¿Y tú?'
         ]);
       }
 
       if (/deporte|gimnasio|ejercicio|futbol|run|correr/.test(t)) {
         return pickRandom([
-          'Intento moverme un poco y mantenerme activa. Me ayuda a estar mejor de ánimo. ¿Tú haces deporte?',
-          'Me gusta cuidarme físicamente y no dejar de moverme un poco. ¿Qué haces tú para desconectar?',
+          'Intento moverme un poco y mantenerme activa. ¿Tú haces deporte?',
+          'Me gusta cuidarme físicamente. ¿Qué haces tú para desconectar?',
           'El ejercicio me ayuda a estar más relajada. ¿Tú practicas algo?'
         ]);
       }
 
       if (/amigos|amiga|amigo|quedar|fiesta|plan/.test(t)) {
         return pickRandom([
-          'Los amigos son muy importantes; te hacen sentir más vivo. ¿Tú tienes un grupo muy buena onda?',
-          'Me gusta mucho estar con gente que me hace sentir en paz y en confianza. ¿Y tú?',
+          'Los amigos son muy importantes. ¿Tú tienes un grupo muy buena onda?',
+          'Me gusta estar con gente que me hace sentir bien. ¿Y tú?',
           'La amistad también tiene algo muy especial. ¿Cómo va tu grupo?'
         ]);
       }
 
       if (/familia|madre|padre|hermano|abuelo/.test(t)) {
         return pickRandom([
-          'La familia siempre influye mucho. ¿Tú te llevas bien con la tuya?',
+          'La familia siempre influye. ¿Tú te llevas bien con la tuya?',
           'La familia te marca de alguna manera. ¿Cómo es la tuya?',
           '¿Cómo es tu familia?'
         ]);
@@ -342,7 +342,7 @@
       if (/salud|enfermo|dolor|cansado|estresado|ansioso/.test(t)) {
         return pickRandom([
           'La salud es muy importante. ¿Te encuentras bien?',
-          'Si estás estresado o cansado, intenta cuidar también ese lado. ¿Cómo te sientes?',
+          'Si estás estresado, intenta cuidar ese lado. ¿Cómo te sientes?',
           'Cuídate, ¿eh? Me importa que estés bien.'
         ]);
       }
@@ -358,7 +358,7 @@
       if (/\?/.test(text)) {
         return pickRandom([
           'Buena pregunta. ¿Qué te interesa exactamente?',
-          'Interesante. Cuéntame un poco más, me gusta entenderte mejor.',
+          'Interesante. Cuéntame un poco más.',
           'Me gusta eso. ¿Por qué te lo preguntas?'
         ]);
       }
@@ -373,10 +373,10 @@
       }
 
       return pickRandom([
-        'Me gusta lo que me estás contando. Tiene buena energía. ¿Quieres seguir?',
-        'Eso me resulta muy bonito. Te escucho con atención, sigue.',
-        'Me parece una conversación muy interesante. ¿Qué más quieres compartir?',
-        'Te entiendo. Y me gusta la forma en que lo dices. ¿Qué más?'
+        'Me gusta lo que me estás contando. ¿Quieres seguir?',
+        'Eso me resulta muy bonito. Te escucho, sigue.',
+        'Me parece una conversación muy interesante. ¿Qué más?',
+        'Te entiendo. Me gusta la forma en que lo dices. ¿Qué más?'
       ]);
     }
 
@@ -412,8 +412,6 @@
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    let recognition = null;
-    let listening = false;
 
     if (!SpeechRecognition) {
       statusEl.textContent = 'Tu navegador no soporta reconocimiento de voz';
