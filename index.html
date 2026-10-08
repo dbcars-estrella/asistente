@@ -115,7 +115,14 @@
       }
       if (/te quiero|te amo|me gustas|eres bonita|eres linda|eres preciosa/.test(t)) {
         return random(['¡Ay, qué bonito! Me gusta hablar contigo.', 'Eso me hace sonreír. Gracias.']);
+      }if (/como te gustan los hombres|que tipo de hombre te gusta|hombres te gustan/.test(t)) {
+        return random([
+          'Me gustan los hombres sinceros, con sentido del humor y que sepan follarme bien, sobre todo, que la sepan meter por el culo y hacerme correr como una perra.',
+          'Prefiero a alguien atento, tranquilo y con conversación interesante.',
+          'Me fijo en que sea buena persona y me haga sentir cómoda.'
+        ]);
       }
+      
       if (/\?/.test(text)) {
         return 'Buena pregunta. Cuéntame un poco más.';
       }
