@@ -386,32 +386,44 @@
         return;
       }
 
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES';
-      utterance.rate = 1;
+      const safeSpeak = () => {
+        const voices = window.speechSynthesis.getVoices();
+        const preferred = voices.find(v => v.lang && v.lang.startsWith('es')) || voices[0];
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-ES';
+        utterance.rate = 1;
+        if (preferred) utterance.voice = preferred;
 
-      const voices = window.speechSynthesis.getVoices();
-      const voice = voices.find(v => v.lang && v.lang.startsWith('es')) || voices[0];
-      if (voice) utterance.voice = voice;
+        utterance.onstart = () => {
+          statusEl.textContent = 'Hablando...';
+        };
+        utterance.onend = () => {
+          statusEl.textContent = 'Listo para escuchar';
+        };
+        utterance.onerror = () => {
+          statusEl.textContent = 'No se pudo reproducir la voz';
+        };
 
-      utterance.onstart = () => {
-        statusEl.textContent = 'Hablando...';
+        lastReply = text;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(utterance);
       };
 
-      utterance.onend = () => {
-        statusEl.textContent = 'Listo para escuchar';
-      };
+      if (window.speechSynthesis.getVoices().length === 0) {
+        const onVoicesReady = () => {
+          safeSpeak();
+          window.speechSynthesis.onvoiceschanged = null;
+        };
+        window.speechSynthesis.onvoiceschanged = onVoicesReady;
+        return;
+      }
 
-      utterance.onerror = () => {
-        statusEl.textContent = 'No se pudo reproducir la voz';
-      };
-
-      lastReply = text;
-      window.speechSynthesis.speak(utterance);
+      safeSpeak();
     }
 
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let listening = false;
 
     if (!SpeechRecognition) {
       statusEl.textContent = 'Tu navegador no soporta reconocimiento de voz';
