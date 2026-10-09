@@ -114,7 +114,7 @@
         return 'De nada, cariño. ¿Qué más me cuentas?';
       }
       if (/te quiero|te amo|me gustas|eres bonita|eres linda|eres preciosa/.test(t)) {
-        return random(['¡Ay, qué bonito! Me gusta hablar contigo.', 'Eso me hace sonreír. Gracias.']);
+        return random(['¡Ay, qué bonito! Me gusta hablar contigo.', 'Eso me hace sonreír y me estoy poniendo cachonda. Gracias.']);
       }if (/como te gustan los hombres|que tipo de hombre te gusta|hombres te gustan/.test(t)) {
         return random([
           'Me gustan los hombres sinceros, con sentido del humor y que sepan follarme bien, sobre todo, que la sepan meter por el culo y hacerme correr como una perra.',
@@ -158,7 +158,7 @@
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      statusEl.textContent = 'Sin reconocimiento de voz';
+      statusEl.textContent = 'con reconocimiento de voz';
       micBtn.disabled = true;
     } else {
       const recognition = new SR();
