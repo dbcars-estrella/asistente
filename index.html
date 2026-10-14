@@ -91,9 +91,9 @@
       border: 1px solid #d9d0e0;
       background: #f8f4fb;
       color: #7038a1;
-      padding: 10px 10px;
+      padding: 10px 8px;
       border-radius: 12px;
-      font-size: 13px;
+      font-size: 12.5px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       -webkit-appearance: none;
@@ -101,6 +101,16 @@
     .learn-bar button:hover { background: #ece2f5; }
     .learn-bar button.danger { color: #b03030; border-color: #e8c8c8; background: #fdf4f4; }
     .learn-bar button.danger:hover { background: #f7e0e0; }
+    .learn-bar.second { margin-top: 6px; }
+    .learn-bar.second button { font-size: 12px; padding: 8px 6px; }
+    .mono {
+      font-family: ui-monospace, Menlo, monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-width: 100%;
+    }
+    .controls { max-height: 45vh; overflow-y: auto; }
   </style>
 </head>
 <body>
@@ -119,6 +129,11 @@
       <button id="learnBtn">🧠 Aprender</button>
       <button id="forgetBtn" class="danger">🗑️ Olvidar</button>
     </div>
+    <div class="learn-bar second">
+      <button id="viewBtn">📋 Ver</button>
+      <button id="exportBtn">📤 Exportar</button>
+      <button id="importBtn">📥 Importar</button>
+    </div>
   </div>
 
   <script>
@@ -129,6 +144,9 @@
     const micBtn = document.getElementById('micBtn');
     const learnBtn = document.getElementById('learnBtn');
     const forgetBtn = document.getElementById('forgetBtn');
+    const viewBtn = document.getElementById('viewBtn');
+    const exportBtn = document.getElementById('exportBtn');
+    const importBtn = document.getElementById('importBtn');
 
     // ---- Aprendizaje ----
     let learned = {};
@@ -142,6 +160,14 @@
     function addMsg(role, text) {
       const div = document.createElement('div');
       div.className = 'msg ' + role;
+      div.textContent = text;
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function addMono(text) {
+      const div = document.createElement('div');
+      div.className = 'msg bot mono';
       div.textContent = text;
       chat.appendChild(div);
       chat.scrollTop = chat.scrollHeight;
@@ -329,6 +355,79 @@
       learningState = null;
       statusEl.textContent = 'Listo';
       const r = 'Hecho. He olvidado todo lo que había aprendido (' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + '). Empezamos de cero. 🧽';
+      addMsg('bot', r);
+      speak(r);
+    });
+
+    // 📋 Ver: muestra lo aprendido como texto
+    viewBtn.addEventListener('click', () => {
+      const keys = Object.keys(learned);
+      if (keys.length === 0) {
+        const r = 'No he aprendido nada todavía. 😊';
+        addMsg('bot', r);
+        speak(r);
+        return;
+      }
+      let out = 'Esto es lo que he aprendido (' + keys.length + '):\n\n';
+      keys.forEach((k, i) => {
+        out += (i + 1) + '. Frase clave: "' + k + '"\n   → Responde: "' + learned[k] + '"\n\n';
+      });
+      addMono(out.trim());
+    });
+
+    // 📤 Exportar: muestra el JSON y lo copia al portapapeles si se puede
+    exportBtn.addEventListener('click', () => {
+      const keys = Object.keys(learned);
+      if (keys.length === 0) {
+        const r = 'No hay nada que exportar todavía. 😊';
+        addMsg('bot', r);
+        speak(r);
+        return;
+      }
+      const json = JSON.stringify(learned);
+      addMono('Copia este texto y guárdalo donde quieras:\n\n' + json);
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(json).then(() => {
+          statusEl.textContent = 'Copiado al portapapeles';
+          setTimeout(() => { if (!learningState) statusEl.textContent = 'Listo'; }, 2000);
+        }).catch(() => {
+          statusEl.textContent = 'Selecciona y copia a mano';
+          setTimeout(() => { if (!learningState) statusEl.textContent = 'Listo'; }, 2500);
+        });
+      } else {
+        statusEl.textContent = 'Selecciona y copia a mano';
+        setTimeout(() => { if (!learningState) statusEl.textContent = 'Listo'; }, 2500);
+      }
+    });
+
+    // 📥 Importar: pide pegar un JSON y lo carga
+    importBtn.addEventListener('click', () => {
+      const entrada = window.prompt('Pega aquí el texto que exportaste antes:');
+      if (!entrada) return;
+      let datos;
+      try {
+        datos = JSON.parse(entrada.trim());
+      } catch (e) {
+        const r = 'Eso no parece un JSON válido. Revisa que lo hayas copiado entero.';
+        addMsg('bot', r);
+        speak(r);
+        return;
+      }
+      if (!datos || typeof datos !== 'object' || Array.isArray(datos)) {
+        const r = 'El formato no es el correcto. Debe ser un objeto con pares de frase y respuesta.';
+        addMsg('bot', r);
+        speak(r);
+        return;
+      }
+      const cuantas = Object.keys(datos).length;
+      const ok = window.confirm('Voy a importar ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + '. Se mezclarán con las que ya sé. ¿Seguimos?');
+      if (!ok) return;
+      for (const k in datos) {
+        if (typeof datos[k] === 'string') learned[k] = datos[k];
+      }
+      saveLearned();
+      const r = '¡Importado! Ahora tengo ' + Object.keys(learned).length + ' cosa' + (Object.keys(learned).length === 1 ? '' : 's') + ' aprendida' + (Object.keys(learned).length === 1 ? '' : 's') + '. 🎉';
       addMsg('bot', r);
       speak(r);
     });
