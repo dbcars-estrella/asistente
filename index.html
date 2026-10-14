@@ -2,7 +2,12 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Lucía">
+  <meta name="theme-color" content="#8e44ad">
   <title>Lucía</title>
   <style>
     * { box-sizing: border-box; }
@@ -13,12 +18,13 @@
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #f3edf7;
+      -webkit-text-size-adjust: 100%;
     }
     body {
       display: flex;
       flex-direction: column;
       height: 100vh;
-      height: 100dvh; /* mejor en móviles con barra de URL */
+      height: 100dvh;
     }
     .header {
       flex-shrink: 0;
@@ -33,6 +39,7 @@
       flex: 1 1 auto;
       min-height: 0;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       padding: 15px;
       display: flex;
       flex-direction: column;
@@ -45,6 +52,7 @@
       flex-shrink: 0;
       background: white;
       padding: 10px 16px 14px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom));
       box-shadow: 0 -1px 5px rgba(0,0,0,0.08);
     }
     .status { text-align: center; font-size: 13px; color: #666; margin-bottom: 8px; height: 18px; }
@@ -55,24 +63,40 @@
       font-size: 30px; cursor: pointer;
       margin: 0 auto 8px; display: block;
       box-shadow: 0 4px 12px rgba(142,68,173,0.3);
+      -webkit-tap-highlight-color: transparent;
     }
     .mic-btn:hover { background: #7038a1; }
     .mic-btn.listening { background: #d32f2f; animation: pulse 1s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(211,47,47,0.4); } 70% { box-shadow: 0 0 0 10px rgba(211,47,47,0); } }
     .input-area { display: flex; gap: 8px; }
-    .input-area input { flex: 1; border: 1px solid #d9d0e0; border-radius: 20px; padding: 10px 14px; font-size: 16px; outline: none; }
-    .send-btn { width: 42px; height: 42px; border: none; background: #8e44ad; color: white; border-radius: 50%; cursor: pointer; font-size: 18px; }
+    .input-area input {
+      flex: 1;
+      border: 1px solid #d9d0e0;
+      border-radius: 20px;
+      padding: 10px 14px;
+      font-size: 16px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .send-btn {
+      width: 42px; height: 42px;
+      border: none; background: #8e44ad; color: white;
+      border-radius: 50%; cursor: pointer; font-size: 18px;
+      -webkit-tap-highlight-color: transparent;
+    }
     .send-btn:hover { background: #7038a1; }
-    .learn-bar { display: flex; gap: 8px; margin-top: 8px; }
+    .learn-bar { display: flex; gap: 8px; margin-top: 10px; }
     .learn-bar button {
       flex: 1;
       border: 1px solid #d9d0e0;
       background: #f8f4fb;
       color: #7038a1;
-      padding: 8px 10px;
+      padding: 10px 10px;
       border-radius: 12px;
       font-size: 13px;
       cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-appearance: none;
     }
     .learn-bar button:hover { background: #ece2f5; }
     .learn-bar button.danger { color: #b03030; border-color: #e8c8c8; background: #fdf4f4; }
@@ -109,7 +133,7 @@
     // ---- Aprendizaje ----
     let learned = {};
     try { learned = JSON.parse(localStorage.getItem('lucia_learned') || '{}') || {}; } catch (e) { learned = {}; }
-    let learningState = null; // { key: frase normalizada, original: texto tal cual }
+    let learningState = null;
 
     function saveLearned() {
       try { localStorage.setItem('lucia_learned', JSON.stringify(learned)); } catch (e) {}
@@ -134,14 +158,12 @@
     function reply(text) {
       const t = normalize(text);
 
-      // 1) Primero mira lo aprendido
       for (const key in learned) {
         if (key.length >= 3 && t.includes(key)) {
           return learned[key];
         }
       }
 
-      // 2) Reglas fijas
       if (/hola|sexo|mamada|pantalones|buenas|hey|ey/.test(t)) {
         return random(['¡Hola, cariño!', '¡Buenas! ¿tienes ganas de sexo?', '¡Hola! Muy contenta y ademas mojada, bájate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);
       }
@@ -207,7 +229,6 @@
         return random(['Cuéntame más.', 'Sigue, que me voy habriendo .', '¿Qué más?', 'Mmm, como me pones!.']);
       }
 
-      // 3) No lo entiende: modo aprendizaje
       return null;
     }
 
@@ -220,13 +241,11 @@
       window.speechSynthesis.speak(u);
     }
 
-    // Comandos para cancelar el aprendizaje
     const CANCEL_WORDS = ['cancelar', 'olvidalo', 'nada', 'dejalo', 'olvida'];
 
     function handleUserMessage(text) {
       addMsg('user', text);
 
-      // ¿Estamos esperando una explicación?
       if (learningState) {
         const tn = normalize(text);
         if (CANCEL_WORDS.includes(tn)) {
@@ -276,7 +295,6 @@
       if (e.key === 'Enter') sendMessage();
     });
 
-    // Botón 🧠 Aprender: usa lo escrito en el input como frase a aprender
     learnBtn.addEventListener('click', () => {
       const text = textInput.value.trim();
       if (!text) {
@@ -296,7 +314,6 @@
       speak(r);
     });
 
-    // Botón 🗑️ Olvidar: borra todo lo aprendido
     forgetBtn.addEventListener('click', () => {
       const cuantas = Object.keys(learned).length;
       if (cuantas === 0) {
@@ -318,7 +335,7 @@
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
-      statusEl.textContent = 'con reconocimiento de voz';
+      statusEl.textContent = 'sin reconocimiento de voz';
       micBtn.disabled = true;
     } else {
       const recognition = new SR();
