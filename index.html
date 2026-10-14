@@ -23,6 +23,11 @@
     .input-area input { flex: 1; border: 1px solid #d9d0e0; border-radius: 20px; padding: 12px 14px; font-size: 16px; outline: none; }
     .send-btn { width: 45px; height: 45px; border: none; background: #8e44ad; color: white; border-radius: 50%; cursor: pointer; font-size: 18px; }
     .send-btn:hover { background: #7038a1; }
+    .learn-bar { display: flex; gap: 8px; margin-top: 10px; }
+    .learn-bar button { flex: 1; border: 1px solid #d9d0e0; background: #f8f4fb; color: #7038a1; padding: 9px 10px; border-radius: 12px; font-size: 13px; cursor: pointer; }
+    .learn-bar button:hover { background: #ece2f5; }
+    .learn-bar button.danger { color: #b03030; border-color: #e8c8c8; background: #fdf4f4; }
+    .learn-bar button.danger:hover { background: #f7e0e0; }
   </style>
 </head>
 <body>
@@ -37,6 +42,10 @@
       <input id="textInput" type="text" placeholder="Escribe...">
       <button class="send-btn" id="sendBtn">→</button>
     </div>
+    <div class="learn-bar">
+      <button id="learnBtn">🧠 Aprender</button>
+      <button id="forgetBtn" class="danger">🗑️ Olvidar</button>
+    </div>
   </div>
 
   <script>
@@ -45,6 +54,17 @@
     const textInput = document.getElementById('textInput');
     const sendBtn = document.getElementById('sendBtn');
     const micBtn = document.getElementById('micBtn');
+    const learnBtn = document.getElementById('learnBtn');
+    const forgetBtn = document.getElementById('forgetBtn');
+
+    // ---- Aprendizaje ----
+    let learned = {};
+    try { learned = JSON.parse(localStorage.getItem('lucia_learned') || '{}') || {}; } catch (e) { learned = {}; }
+    let learningState = null; // { key: frase normalizada, original: texto tal cual }
+
+    function saveLearned() {
+      try { localStorage.setItem('lucia_learned', JSON.stringify(learned)); } catch (e) {}
+    }
 
     function addMsg(role, text) {
       const div = document.createElement('div');
@@ -64,7 +84,15 @@
 
     function reply(text) {
       const t = normalize(text);
-      
+
+      // 1) Primero mira lo aprendido
+      for (const key in learned) {
+        if (key.length >= 3 && t.includes(key)) {
+          return learned[key];
+        }
+      }
+
+      // 2) Reglas fijas
       if (/hola|sexo|mamada|pantalones|buenas|hey|ey/.test(t)) {
         return random(['¡Hola, cariño!', '¡Buenas! ¿tienes ganas de sexo?', '¡Hola! Muy contenta y ademas mojada, bájate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);
       }
@@ -129,7 +157,9 @@
       if (t.length < 20) {
         return random(['Cuéntame más.', 'Sigue, que me voy habriendo .', '¿Qué más?', 'Mmm, como me pones!.']);
       }
-      return random(['Me gusta lo que me estás contando.', 'Eso me resulta morboso.', 'Te escucho.', 'Interesante.']);
+
+      // 3) No lo entiende: modo aprendizaje
+      return null;
     }
 
     function speak(text) {
@@ -141,19 +171,101 @@
       window.speechSynthesis.speak(u);
     }
 
+    // Comandos para cancelar el aprendizaje
+    const CANCEL_WORDS = ['cancelar', 'olvidalo', 'nada', 'dejalo', 'olvida'];
+
+    function handleUserMessage(text) {
+      addMsg('user', text);
+
+      // ¿Estamos esperando una explicación?
+      if (learningState) {
+        const tn = normalize(text);
+        if (CANCEL_WORDS.includes(tn)) {
+          const frase = learningState.original;
+          learningState = null;
+          statusEl.textContent = 'Listo';
+          const r = 'Vale, olvidamos "' + frase + '". ¿De qué hablamos?';
+          addMsg('bot', r);
+          speak(r);
+          return;
+        }
+        learned[learningState.key] = text;
+        saveLearned();
+        const frase = learningState.original;
+        learningState = null;
+        statusEl.textContent = 'Listo';
+        const r = '¡Aprendido! Cuando me digas algo parecido a "' + frase + '" te responderé eso. 😉';
+        addMsg('bot', r);
+        speak(r);
+        return;
+      }
+
+      const response = reply(text);
+
+      if (response === null) {
+        learningState = { key: normalize(text), original: text };
+        statusEl.textContent = 'Modo aprendizaje...';
+        const r = 'Estoy en modo aprendizaje 🤔. No he entendido bien "' + text + '". Explícame qué debería responder cuando me digas algo así. (Si prefieres no enseñarme nada, escribe "cancelar".)';
+        addMsg('bot', r);
+        speak(r);
+        return;
+      }
+
+      addMsg('bot', response);
+      speak(response);
+    }
+
     function sendMessage() {
       const text = textInput.value.trim();
       if (!text) return;
-      addMsg('user', text);
-      const response = reply(text);
-      addMsg('bot', response);
-      speak(response);
+      handleUserMessage(text);
       textInput.value = '';
     }
 
     sendBtn.addEventListener('click', sendMessage);
     textInput.addEventListener('keypress', (e) => {
       if (e.key === 'Enter') sendMessage();
+    });
+
+    // Botón 🧠 Aprender: usa lo escrito en el input como frase a aprender
+    learnBtn.addEventListener('click', () => {
+      const text = textInput.value.trim();
+      if (!text) {
+        const r = 'Escribe primero la frase que quieres que aprenda, y luego pulsa 🧠 Aprender.';
+        addMsg('bot', r);
+        speak(r);
+        return;
+      }
+      // Si ya estaba en modo aprendizaje, lo descartamos sin guardar
+      if (learningState) learningState = null;
+
+      addMsg('user', text);
+      textInput.value = '';
+      learningState = { key: normalize(text), original: text };
+      statusEl.textContent = 'Modo aprendizaje...';
+      const r = 'Vale, quiero aprender a responder a "' + text + '". ¿Qué debería decir cuando me digas algo así? (Escribe "cancelar" si te arrepientes.)';
+      addMsg('bot', r);
+      speak(r);
+    });
+
+    // Botón 🗑️ Olvidar: borra todo lo aprendido
+    forgetBtn.addEventListener('click', () => {
+      const cuantas = Object.keys(learned).length;
+      if (cuantas === 0) {
+        const r = 'No hay nada que olvidar todavía. 😊';
+        addMsg('bot', r);
+        speak(r);
+        return;
+      }
+      const ok = window.confirm('¿Seguro que quieres borrar las ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + ' que he aprendido?');
+      if (!ok) return;
+      learned = {};
+      saveLearned();
+      learningState = null;
+      statusEl.textContent = 'Listo';
+      const r = 'Hecho. He olvidado todo lo que había aprendido (' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + '). Empezamos de cero. 🧽';
+      addMsg('bot', r);
+      speak(r);
     });
 
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -177,11 +289,7 @@
       recognition.onresult = (e) => {
         const transcript = e.results[0][0].transcript;
         if (transcript) {
-          const clean = transcript.trim();
-          addMsg('user', clean);
-          const response = reply(clean);
-          addMsg('bot', response);
-          speak(response);
+          handleUserMessage(transcript.trim());
         }
       };
 
@@ -192,7 +300,7 @@
       recognition.onend = () => {
         listening = false;
         micBtn.classList.remove('listening');
-        statusEl.textContent = 'Listo';
+        if (!learningState) statusEl.textContent = 'Listo';
       };
 
       micBtn.addEventListener('click', () => {
