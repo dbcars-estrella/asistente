@@ -63,6 +63,7 @@
     </div>
     <div class="learn-bar second">
       <button id="toggleAIBtn">🤖 IA Activada</button>
+      <button id="keyBtn">🔑 Clave API</button>
     </div>
   </div>
 
@@ -97,11 +98,16 @@
       const exportBtn = document.getElementById('exportBtn');
       const importBtn = document.getElementById('importBtn');
       const toggleAIBtn = document.getElementById('toggleAIBtn');
+      const keyBtn = document.getElementById('keyBtn');
 
       // ================================================================
       // ---- CONFIGURACION DE IA (OPENROUTER) ----
+      // La clave se guarda en el iPhone. NO se mete en el codigo.
       // ================================================================
-      const OR_API_KEY ='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';// <-- Clave sk-or-v1-...
+      let OR_API_KEY = '';
+      try { OR_API_KEY = localStorage.getItem('lucia_or_key') || ''; } catch(e) { OR_API_KEY = ''; }
+
+      // Modelo (sin censura). Si falla, se puede cambiar aqui.
       const OR_MODEL = 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free';
       const MAX_HISTORY = 10;
       // ================================================================
@@ -149,8 +155,8 @@
       }
 
       async function askAI(userMessage) {
-        if (!OR_API_KEY || OR_API_KEY === 'PEGA_AQUI_TU_CLAVE') {
-          addMsg('bot', 'No hay API key configurada.');
+        if (!OR_API_KEY) {
+          addMsg('bot', 'No hay clave API. Pulsa 🔑 Clave API para meterla.');
           return null;
         }
 
@@ -173,9 +179,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + OR_API_KEY,
-              'HTTP-Referer': 'https://dbcars-estrella.github.io',
-              'X-Title': 'Lucia'
+              'Authorization': 'Bearer ' + OR_API_KEY
             },
             body: JSON.stringify(payload)
           });
@@ -307,6 +311,31 @@
       textInput.addEventListener('keypress', function(e) {
         if (e.key === 'Enter') sendMessage();
       });
+
+      // ---- Boton 🔑 Clave API ----
+      keyBtn.addEventListener('click', function() {
+        const actual = OR_API_KEY ? OR_API_KEY.substring(0, 20) + '...' : '(vacia)';
+        const nueva = window.prompt('Pega aqui tu clave de OpenRouter (empieza por sk-or-v1-).\n\nActual: ' + actual);
+        if (nueva === null) return;
+        const limpia = nueva.trim();
+        if (!limpia) {
+          const r = 'No has pegado nada. La clave sigue igual.';
+          addMsg('bot', r);
+          return;
+        }
+        OR_API_KEY = limpia;
+        try { localStorage.setItem('lucia_or_key', limpia); } catch(e) {}
+        const r = 'Clave guardada (' + limpia.substring(0, 12) + '...). Prueba a hablar conmigo.';
+        addMsg('bot', r);
+        speak(r);
+      });
+
+      // ---- Aviso al cargar si no hay clave ----
+      if (!OR_API_KEY) {
+        setTimeout(function() {
+          addMsg('bot', 'No tengo clave de IA configurada. Pulsa el boton 🔑 Clave API (abajo) y pega tu clave de OpenRouter.');
+        }, 600);
+      }
 
       learnBtn.addEventListener('click', function() {
         const text = textInput.value.trim();
