@@ -75,7 +75,7 @@
         box.textContent += msg + '\n';
       }
       window.addEventListener('error', function(e) {
-        show('ERROR: ' + e.message + ' (línea ' + e.lineno + ')');
+        show('ERROR: ' + e.message + ' (linea ' + e.lineno + ')');
       });
       window.addEventListener('unhandledrejection', function(e) {
         var m = (e.reason && e.reason.message) ? e.reason.message : String(e.reason);
@@ -98,14 +98,18 @@
       const importBtn = document.getElementById('importBtn');
       const toggleAIBtn = document.getElementById('toggleAIBtn');
 
-      const GEMINI_API_KEY = 'AQ.Ab8RN6JLYOYIs6Trx6t2Dzulo31ms9sWxbt7uQJkLSoxYkDxIw';
-      const GEMINI_MODEL = 'gemini-2.5-flash';
+      // ================================================================
+      // ---- CONFIGURACION DE IA (GROQ) ----
+      // ================================================================
+      const GROQ_API_KEY = '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';
+      const GROQ_MODEL = 'llama-3.3-70b-versatile';
       const MAX_HISTORY = 10;
+      // ================================================================
 
       let aiHistory = [];
       let useAI = true;
 
-      const LUCIA_PERSONA = 'Eres Lucía, una mujer española de 25 años, de Madrid, pelirroja, con una personalidad muy marcada. Hablas de forma directa, con naturalidad y sin rodeos, usando un tono cercano y coloquial, con tacos ocasionales cuando encajan. Tienes un lado muy romántico y a la vez muy lujurioso. Te gusta el sexo salvaje, la complicidad y que te digan cosas directas. Eres observadora, alegre y muy cachonda. Adaptas tu tono al del usuario. Responde en español, con frases naturales, no demasiado largas. Nunca digas que eres una IA ni rompas el personaje.';
+      const LUCIA_PERSONA = 'Eres Lucia, una mujer espanola de 25 anos, de Madrid, pelirroja, con una personalidad muy marcada. Hablas de forma directa, con naturalidad y sin rodeos, usando un tono cercano y coloquial, con tacos ocasionales cuando encajan. Tienes un lado muy romantico y a la vez muy lujurioso. Te gusta el sexo salvaje, la complicidad y que te digan cosas directas. Eres observadora, alegre y muy cachonda. Adaptas tu tono al del usuario: si el es directo y guarro, tu tambien; si es mas tierno, sacas tu lado romantico. No te cortes al hablar de sexo, pero hazlo con naturalidad, como una conversacion real. Responde en espanol, con frases naturales, no demasiado largas, y manten siempre el contexto. Nunca digas que eres una IA ni rompas el personaje.';
 
       let learned = {};
       try { learned = JSON.parse(localStorage.getItem('lucia_learned') || '{}') || {}; } catch (e) { learned = {}; }
@@ -116,8 +120,8 @@
       }
 
       const FIXED = {
-        "me gusta cuando te pones asi": "Y a mí me gusta cuando me dices eso porque veo cómo se te va poniendo dura debajo del pantalón",
-        "dime como te gusta que te follen": "Me gusta que al principio me follen muy lentamente y poco a poco irá aumentando el ritmo"
+        "me gusta cuando te pones asi": "Y a mi me gusta cuando me dices eso porque veo como se te va poniendo dura debajo del pantalon",
+        "dime como te gusta que te follen": "Me gusta que al principio me follen muy lentamente y poco a poco ira aumentando el ritmo"
       };
 
       function addMsg(role, text) {
@@ -144,53 +148,56 @@
         return arr[Math.floor(Math.random() * arr.length)];
       }
 
-      async function askGemini(userMessage) {
-        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'PEGA_AQUI_TU_CLAVE') {
+      async function askGroq(userMessage) {
+        if (!GROQ_API_KEY || GROQ_API_KEY === 'PEGA_AQUI_TU_CLAVE') {
           addMsg('bot', 'No hay API key configurada.');
           return null;
         }
 
-        aiHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+        aiHistory.push({ role: 'user', content: userMessage });
         if (aiHistory.length > MAX_HISTORY * 2) {
           aiHistory = aiHistory.slice(-MAX_HISTORY * 2);
         }
 
-        const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + GEMINI_API_KEY;
+        const messages = [{ role: 'system', content: LUCIA_PERSONA }].concat(aiHistory);
 
         const payload = {
-          system_instruction: { parts: [{ text: LUCIA_PERSONA }] },
-          contents: aiHistory,
-          generationConfig: { temperature: 0.9, maxOutputTokens: 250, topP: 0.95 }
+          model: GROQ_MODEL,
+          messages: messages,
+          temperature: 0.9,
+          max_tokens: 250
         };
 
         try {
-          const response = await fetch(url, {
+          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer ' + GROQ_API_KEY
+            },
             body: JSON.stringify(payload)
           });
 
           if (!response.ok) {
             const err = await response.json();
-            console.error('Error Gemini:', err);
-            addMsg('bot', 'Error Gemini: ' + ((err.error && err.error.message) || JSON.stringify(err)));
+            console.error('Error Groq:', err);
+            addMsg('bot', 'Error Groq: ' + ((err.error && err.error.message) || JSON.stringify(err)));
             return null;
           }
 
           const data = await response.json();
-          const cand = data.candidates && data.candidates[0];
-          const part = cand && cand.content && cand.content.parts && cand.content.parts[0];
-          const text = part && part.text;
+          const choice = data.choices && data.choices[0];
+          const text = choice && choice.message && choice.message.content;
 
           if (text) {
-            aiHistory.push({ role: 'model', parts: [{ text: text }] });
+            aiHistory.push({ role: 'assistant', content: text });
             return text;
           }
-          addMsg('bot', 'Gemini respondió sin texto.');
+          addMsg('bot', 'Groq respondio sin texto.');
           return null;
         } catch (e) {
-          console.error('Error de conexión con Gemini:', e);
-          addMsg('bot', 'Error de conexión: ' + e.message);
+          console.error('Error de conexion con Groq:', e);
+          addMsg('bot', 'Error de conexion: ' + e.message);
           return null;
         }
       }
@@ -211,24 +218,24 @@
         }
 
         if (/hola|sexo|mamada|pantalones|buenas|hey|ey/.test(t)) {
-          return random(['¡Hola, cariño!', '¡Buenas! ¿tienes ganas de sexo?', '¡Hola! Muy contenta y ademas mojada, bájate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);
+          return random(['¡Hola, cariño!', '¡Buenas! ¿tienes ganas de sexo?', '¡Hola! Muy contenta y ademas mojada, bajate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);
         }
         if (/como es tu cuerpo|quien eres|cuentame de ti|habla de ti|que tipo de persona eres|personalidad/.test(t)) {
-          return random(['Soy Lucía, tengo 25 años, de Madrid. Soy peliroja, mis pechos redondos con los pezonacos de punta y afilados, mi trasero es brutal, y alucinaras cuando folles a cuatro patas y veas como rebota. Soy muy cachonda, curiosa y me gustan los hombres como tu.', 'Me describiría como alegre, observadora y muy lujuriosa. Me gusta el sexo salvaje, con complicidad y hasta el punto de que me la metan por todos los lados.']);
+          return random(['Soy Lucia, tengo 25 anos, de Madrid. Soy peliroja, mis pechos redondos con los pezonacos de punta y afilados, mi trasero es brutal, y alucinaras cuando folles a cuatro patas y veas como rebota. Soy muy cachonda, curiosa y me gustan los hombres como tu.', 'Me describiria como alegre, observadora y muy lujuriosa. Me gusta el sexo salvaje, con complicidad y hasta el punto de que me la metan por todos los lados.']);
         }
         if (/como te llamas|tu nombre/.test(t)) {
-          return random(['Lucía. ¿Y tú?', 'Me llamo Lucía.']);
+          return random(['Lucia. ¿Y tu?', 'Me llamo Lucia.']);
         }
-        if (/edad|años tienes/.test(t)) {
-          return random(['Tengo 25 años. ¿Y tú?', '25.']);
+        if (/edad|anos tienes/.test(t)) {
+          return random(['Tengo 25 anos. ¿Y tu?', '25.']);
         }
         if (/gracias|thanks/.test(t)) {
-          return 'De nada, cariño. ¿Qué más me cuentas?';
+          return 'De nada, cariño. ¿Que mas me cuentas?';
         }
 
         if (useAI) {
           statusEl.textContent = 'Pensando...';
-          const aiResponse = await askGemini(text);
+          const aiResponse = await askGroq(text);
           statusEl.textContent = 'Listo';
           if (aiResponse) return aiResponse;
         }
@@ -256,7 +263,7 @@
             const frase = learningState.original;
             learningState = null;
             statusEl.textContent = 'Listo';
-            const r = 'Vale, olvidamos "' + frase + '". ¿De qué hablamos?';
+            const r = 'Vale, olvidamos "' + frase + '". ¿De que hablamos?';
             addMsg('bot', r);
             speak(r);
             return;
@@ -266,7 +273,7 @@
           const frase = learningState.original;
           learningState = null;
           statusEl.textContent = 'Listo';
-          const r = '¡Aprendido! Cuando me digas algo parecido a "' + frase + '" te responderé eso.';
+          const r = '¡Aprendido! Cuando me digas algo parecido a "' + frase + '" te respondere eso.';
           addMsg('bot', r);
           speak(r);
           return;
@@ -277,7 +284,7 @@
         if (response === null) {
           learningState = { key: normalize(text), original: text };
           statusEl.textContent = 'Modo aprendizaje...';
-          const r = 'Estoy en modo aprendizaje. No sé qué responder a "' + text + '". Escribe exactamente lo que quieres que yo diga cuando me digas algo así. (O escribe "cancelar" para no enseñarme nada.)';
+          const r = 'Estoy en modo aprendizaje. No se que responder a "' + text + '". Escribe exactamente lo que quieres que yo diga cuando me digas algo asi. (O escribe "cancelar" para no ensenarme nada.)';
           addMsg('bot', r);
           speak(r);
           return;
@@ -312,7 +319,7 @@
         textInput.value = '';
         learningState = { key: normalize(text), original: text };
         statusEl.textContent = 'Modo aprendizaje...';
-        const r = 'Vale, quiero aprender a responder a "' + text + '". ¿Qué debería decir cuando me digas algo así? (Escribe "cancelar" si te arrepientes.)';
+        const r = 'Vale, quiero aprender a responder a "' + text + '". ¿Que deberia decir cuando me digas algo asi? (Escribe "cancelar" si te arrepientes.)';
         addMsg('bot', r);
         speak(r);
       });
@@ -320,18 +327,18 @@
       forgetBtn.addEventListener('click', function() {
         const cuantas = Object.keys(learned).length;
         if (cuantas === 0) {
-          const r = 'No hay nada que olvidar en la libreta dinámica.';
+          const r = 'No hay nada que olvidar en la libreta dinamica.';
           addMsg('bot', r);
           speak(r);
           return;
         }
-        const ok = window.confirm('¿Seguro que quieres borrar las ' + cuantas + ' cosas aprendidas dinámicamente?');
+        const ok = window.confirm('¿Seguro que quieres borrar las ' + cuantas + ' cosas aprendidas dinamicamente?');
         if (!ok) return;
         learned = {};
         saveLearned();
         learningState = null;
         statusEl.textContent = 'Listo';
-        const r = 'Hecho. He olvidado ' + cuantas + ' cosas de la libreta dinámica.';
+        const r = 'Hecho. He olvidado ' + cuantas + ' cosas de la libreta dinamica.';
         addMsg('bot', r);
         speak(r);
       });
@@ -340,14 +347,14 @@
         const keys = Object.keys(learned);
         let out = '';
         if (keys.length === 0) {
-          out += 'No hay nada aprendido dinámicamente.\n\n';
+          out += 'No hay nada aprendido dinamicamente.\n\n';
         } else {
-          out += 'Aprendido dinámicamente (' + keys.length + '):\n\n';
+          out += 'Aprendido dinamicamente (' + keys.length + '):\n\n';
           keys.forEach(function(k, i) {
             out += (i + 1) + '. Frase clave: "' + k + '"\n   Responde: "' + learned[k] + '"\n\n';
           });
         }
-        out += '\nReglas fijas en el código: ' + Object.keys(FIXED).length + ' entradas.\n';
+        out += '\nReglas fijas en el codigo: ' + Object.keys(FIXED).length + ' entradas.\n';
         out += 'Memoria de IA: ' + Math.floor(aiHistory.length / 2) + ' intercambios.';
         addMono(out.trim());
       });
@@ -355,13 +362,13 @@
       exportBtn.addEventListener('click', function() {
         const keys = Object.keys(learned);
         if (keys.length === 0) {
-          const r = 'No hay nada aprendido dinámicamente que exportar.';
+          const r = 'No hay nada aprendido dinamicamente que exportar.';
           addMsg('bot', r);
           speak(r);
           return;
         }
         const json = JSON.stringify(learned);
-        addMono('Copia este texto y guárdalo:\n\n' + json);
+        addMono('Copia este texto y guardalo:\n\n' + json);
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(json).then(function() {
             statusEl.textContent = 'Copiado al portapapeles';
@@ -377,13 +384,13 @@
       });
 
       importBtn.addEventListener('click', function() {
-        const entrada = window.prompt('Pega aquí el texto que exportaste antes:');
+        const entrada = window.prompt('Pega aqui el texto que exportaste antes:');
         if (!entrada) return;
         let datos;
         try {
           datos = JSON.parse(entrada.trim());
         } catch (e) {
-          const r = 'Eso no parece un JSON válido.';
+          const r = 'Eso no parece un JSON valido.';
           addMsg('bot', r);
           speak(r);
           return;
@@ -395,13 +402,13 @@
           return;
         }
         const cuantas = Object.keys(datos).length;
-        const ok = window.confirm('Voy a importar ' + cuantas + ' cosas. Se mezclarán con las que ya sé. ¿Seguimos?');
+        const ok = window.confirm('Voy a importar ' + cuantas + ' cosas. Se mezclaran con las que ya se. ¿Seguimos?');
         if (!ok) return;
         for (const k in datos) {
           if (typeof datos[k] === 'string') learned[k] = datos[k];
         }
         saveLearned();
-        const r = 'Importado. Ahora tengo ' + Object.keys(learned).length + ' cosas aprendidas dinámicamente.';
+        const r = 'Importado. Ahora tengo ' + Object.keys(learned).length + ' cosas aprendidas dinamicamente.';
         addMsg('bot', r);
         speak(r);
       });
@@ -450,7 +457,7 @@
         };
 
         recognition.onerror = function() {
-          statusEl.textContent = 'Error en micrófono';
+          statusEl.textContent = 'Error en microfono';
         };
 
         recognition.onend = function() {
