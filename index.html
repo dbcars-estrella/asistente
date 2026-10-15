@@ -99,10 +99,10 @@
       const toggleAIBtn = document.getElementById('toggleAIBtn');
 
       // ================================================================
-      // ---- CONFIGURACION DE IA (GROQ) ----
+      // ---- CONFIGURACION DE IA (OPENROUTER) ----
       // ================================================================
-      const GROQ_API_KEY = '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';
-      const GROQ_MODEL =  'openai/gpt-oss-20b';
+      const OR_API_KEY = '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'; // <-- Clave sk-or-v1-...
+      const OR_MODEL = 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free';
       const MAX_HISTORY = 10;
       // ================================================================
 
@@ -148,8 +148,8 @@
         return arr[Math.floor(Math.random() * arr.length)];
       }
 
-      async function askGroq(userMessage) {
-        if (!GROQ_API_KEY || GROQ_API_KEY === 'PEGA_AQUI_TU_CLAVE') {
+      async function askAI(userMessage) {
+        if (!OR_API_KEY || OR_API_KEY === 'PEGA_AQUI_TU_CLAVE') {
           addMsg('bot', 'No hay API key configurada.');
           return null;
         }
@@ -162,26 +162,28 @@
         const messages = [{ role: 'system', content: LUCIA_PERSONA }].concat(aiHistory);
 
         const payload = {
-          model: GROQ_MODEL,
+          model: OR_MODEL,
           messages: messages,
           temperature: 0.9,
           max_tokens: 250
         };
 
         try {
-          const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': 'Bearer ' + GROQ_API_KEY
+              'Authorization': 'Bearer ' + OR_API_KEY,
+              'HTTP-Referer': 'https://dbcars-estrella.github.io',
+              'X-Title': 'Lucia'
             },
             body: JSON.stringify(payload)
           });
 
           if (!response.ok) {
             const err = await response.json();
-            console.error('Error Groq:', err);
-            addMsg('bot', 'Error Groq: ' + ((err.error && err.error.message) || JSON.stringify(err)));
+            console.error('Error OpenRouter:', err);
+            addMsg('bot', 'Error OpenRouter: ' + ((err.error && err.error.message) || JSON.stringify(err)));
             return null;
           }
 
@@ -193,10 +195,10 @@
             aiHistory.push({ role: 'assistant', content: text });
             return text;
           }
-          addMsg('bot', 'Groq respondio sin texto.');
+          addMsg('bot', 'OpenRouter respondio sin texto.');
           return null;
         } catch (e) {
-          console.error('Error de conexion con Groq:', e);
+          console.error('Error de conexion con OpenRouter:', e);
           addMsg('bot', 'Error de conexion: ' + e.message);
           return null;
         }
@@ -235,7 +237,7 @@
 
         if (useAI) {
           statusEl.textContent = 'Pensando...';
-          const aiResponse = await askGroq(text);
+          const aiResponse = await askAI(text);
           statusEl.textContent = 'Listo';
           if (aiResponse) return aiResponse;
         }
