@@ -68,7 +68,7 @@
     const chat = document.getElementById('chat');
     const statusEl = document.getElementById('status');
     const textInput = document.getElementById('textInput');
-    const sendBtn', JSON.stringify( = document.getElementById('sendBtn');
+    const sendBtn = document.getElementById('sendBtn');
     const micBtn = document.getElementById('micBtn');
     const learnBtn = document.getElementById('learnBtn');
     const forgetBtn = document.getElementById('forgetBtn');
@@ -95,7 +95,7 @@
     let learningState = null;
 
     function saveLearned() {
-      try { localStorage.setItem('lucia_learnedlearned)); } catch (e) {}
+      try { localStorage.setItem('lucia_learned', JSON.stringify(learned)); } catch (e) {}
     }
 
     const FIXED = {
