@@ -65,6 +65,10 @@
       <button id="toggleAIBtn">🤖 IA Activada</button>
       <button id="keyBtn">🔑 Clave API</button>
     </div>
+    <div class="learn-bar second">
+      <button id="voiceBtn">🔊 Voz</button>
+      <button id="testVoiceBtn">▶️ Probar voz</button>
+    </div>
   </div>
 
   <script>
@@ -99,18 +103,58 @@
       const importBtn = document.getElementById('importBtn');
       const toggleAIBtn = document.getElementById('toggleAIBtn');
       const keyBtn = document.getElementById('keyBtn');
+      const voiceBtn = document.getElementById('voiceBtn');
+      const testVoiceBtn = document.getElementById('testVoiceBtn');
 
       // ================================================================
       // ---- CONFIGURACION DE IA (OPENROUTER) ----
-      // La clave se guarda en el iPhone. NO se mete en el codigo.
       // ================================================================
       let OR_API_KEY = '';
       try { OR_API_KEY = localStorage.getItem('lucia_or_key') || ''; } catch(e) { OR_API_KEY = ''; }
-
-      // Modelo (sin censura). Si falla, se puede cambiar aqui.
       const OR_MODEL = 'cognitivecomputations/dolphin-mistral-24b-venice-edition:free';
       const MAX_HISTORY = 10;
       // ================================================================
+
+      // ================================================================
+      // ---- VOZ ----
+      // ================================================================
+      let vocesDisponibles = [];
+      let vozElegida = null;
+      try {
+        const guardada = localStorage.getItem('lucia_voice');
+        if (guardada) vozElegida = guardada;
+      } catch(e) {}
+
+      function cargarVoces() {
+        if (!('speechSynthesis' in window)) return;
+        vocesDisponibles = window.speechSynthesis.getVoices() || [];
+      }
+      cargarVoces();
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = cargarVoces;
+        setTimeout(cargarVoces, 500);
+        setTimeout(cargarVoces, 1500);
+      }
+
+      function encontrarVoz(preferida) {
+        // 1) Si el usuario ha elegido una, usarla
+        if (preferida) {
+          const v = vocesDisponibles.find(function(x) { return x.name === preferida; });
+          if (v) return v;
+        }
+        // 2) Buscar las mejores voces es-ES por nombre
+        const nombres = ['Monica', 'Mónica', 'Marisol', 'Angelica', 'Angélica', 'Paulina', 'Helena', 'Google español'];
+        for (let i = 0; i < nombres.length; i++) {
+          const v = vocesDisponibles.find(function(x) { return x.name.indexOf(nombres[i]) !== -1; });
+          if (v) return v;
+        }
+        // 3) Cualquier voz es-ES
+        let v = vocesDisponibles.find(function(x) { return x.lang === 'es-ES'; });
+        if (v) return v;
+        // 4) Cualquier voz en español
+        v = vocesDisponibles.find(function(x) { return x.lang && x.lang.indexOf('es') === 0; });
+        return v || null;
+      }
 
       let aiHistory = [];
       let useAI = true;
@@ -126,11 +170,12 @@
       }
 
       const FIXED = {
-        "me gusta cuando te pones asi": "Y a mi me gusta cuando me dices eso porque veo como se te va poniendo dura debajo del pantalon",
+        "me:', gusta cuando te p eones asi": "Y a mi me gusta cuando me dices eso porque veo como se te va poniendo dura debajo del pantalon",
         "dime como te gusta que te follen": "Me gusta que al principio me follen muy lentamente y poco a poco ira aumentando el ritmo"
       };
 
-      function addMsg(role, text) {
+      function addMsg(role,);
+          addMsg text) {
         const div = document.createElement('div');
         div.className = 'msg ' + role;
         div.textContent = text;
@@ -166,7 +211,6 @@
         }
 
         const messages = [{ role: 'system', content: LUCIA_PERSONA }].concat(aiHistory);
-
         const payload = {
           model: OR_MODEL,
           messages: messages,
@@ -202,8 +246,7 @@
           addMsg('bot', 'OpenRouter respondio sin texto.');
           return null;
         } catch (e) {
-          console.error('Error de conexion con OpenRouter:', e);
-          addMsg('bot', 'Error de conexion: ' + e.message);
+          console.error('Error de conexion con OpenRouter('bot', 'Error de conexion: ' + e.message);
           return null;
         }
       }
@@ -254,7 +297,11 @@
         window.speechSynthesis.cancel();
         const u = new SpeechSynthesisUtterance(text);
         u.lang = 'es-ES';
-        u.rate = 1;
+        const voz = encontrarVoz(vozElegida);
+        if (voz) u.voice = voz;
+        u.rate = 0.98;
+        u.pitch = 1.05;
+        u.volume = 1;
         window.speechSynthesis.speak(u);
       }
 
@@ -312,25 +359,52 @@
         if (e.key === 'Enter') sendMessage();
       });
 
-      // ---- Boton 🔑 Clave API ----
       keyBtn.addEventListener('click', function() {
         const actual = OR_API_KEY ? OR_API_KEY.substring(0, 20) + '...' : '(vacia)';
         const nueva = window.prompt('Pega aqui tu clave de OpenRouter (empieza por sk-or-v1-).\n\nActual: ' + actual);
         if (nueva === null) return;
         const limpia = nueva.trim();
         if (!limpia) {
-          const r = 'No has pegado nada. La clave sigue igual.';
-          addMsg('bot', r);
+          addMsg('bot', 'No has pegado nada. La clave sigue igual.');
           return;
         }
         OR_API_KEY = limpia;
         try { localStorage.setItem('lucia_or_key', limpia); } catch(e) {}
-        const r = 'Clave guardada (' + limpia.substring(0, 12) + '...). Prueba a hablar conmigo.';
-        addMsg('bot', r);
-        speak(r);
+        addMsg('bot', 'Clave guardada (' + limpia.substring(0, 12) + '...). Prueba a hablar conmigo.');
       });
 
-      // ---- Aviso al cargar si no hay clave ----
+      // ---- Boton Voz: elegir voz ----
+      voiceBtn.addEventListener('click', function() {
+        cargarVoces();
+        if (!vocesDisponibles.length) {
+          addMsg('bot', 'No hay voces disponibles todavia. Espera un momento y vuelve a pulsar.');
+          return;
+        }
+        const espanolas = vocesDisponibles.filter(function(v) { return v.lang && v.lang.indexOf('es') === 0; });
+        const lista = espanolas.length ? espanolas : vocesDisponibles;
+        let texto = 'Voces disponibles:\n\n';
+        for (let i = 0; i < lista.length; i++) {
+          texto += (i + 1) + '. ' + lista[i].name + ' (' + lista[i].lang + ')\n';
+        }
+        texto += '\nEscribe el numero de la voz que quieras usar:';
+        const elegida = window.prompt(texto);
+        if (elegida === null) return;
+        const idx = parseInt(elegida, 10) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= lista.length) {
+          addMsg('bot', 'Numero no valido. No he cambiado nada.');
+          return;
+        }
+        vozElegida = lista[idx].name;
+        try { localStorage.setItem('lucia_voice', vozElegida); } catch(e) {}
+        addMsg('bot', 'Voz cambiada a: ' + vozElegida);
+        speak('Hola, soy Lucía. Así suena mi nueva voz.');
+      });
+
+      // ---- Boton Probar voz ----
+      testVoiceBtn.addEventListener('click', function() {
+        speak('Hola, soy Lucía. Me gusta cómo suena esto, ¿a ti también?');
+      });
+
       if (!OR_API_KEY) {
         setTimeout(function() {
           addMsg('bot', 'No tengo clave de IA configurada. Pulsa el boton 🔑 Clave API (abajo) y pega tu clave de OpenRouter.');
@@ -386,7 +460,8 @@
           });
         }
         out += '\nReglas fijas en el codigo: ' + Object.keys(FIXED).length + ' entradas.\n';
-        out += 'Memoria de IA: ' + Math.floor(aiHistory.length / 2) + ' intercambios.';
+        out += 'Memoria de IA: ' + Math.floor(aiHistory.length / 2) + ' intercambios.\n';
+        out += 'Voz actual: ' + (vozElegida || '(automatica)');
         addMono(out.trim());
       });
 
@@ -421,15 +496,11 @@
         try {
           datos = JSON.parse(entrada.trim());
         } catch (e) {
-          const r = 'Eso no parece un JSON valido.';
-          addMsg('bot', r);
-          speak(r);
+          addMsg('bot', 'Eso no parece un JSON valido.');
           return;
         }
         if (!datos || typeof datos !== 'object' || Array.isArray(datos)) {
-          const r = 'El formato no es el correcto.';
-          addMsg('bot', r);
-          speak(r);
+          addMsg('bot', 'El formato no es el correcto.');
           return;
         }
         const cuantas = Object.keys(datos).length;
@@ -439,9 +510,7 @@
           if (typeof datos[k] === 'string') learned[k] = datos[k];
         }
         saveLearned();
-        const r = 'Importado. Ahora tengo ' + Object.keys(learned).length + ' cosas aprendidas dinamicamente.';
-        addMsg('bot', r);
-        speak(r);
+        addMsg('bot', 'Importado. Ahora tengo ' + Object.keys(learned).length + ' cosas aprendidas dinamicamente.');
       });
 
       toggleAIBtn.addEventListener('click', function() {
@@ -450,16 +519,12 @@
           toggleAIBtn.textContent = '🤖 IA Activada';
           toggleAIBtn.style.color = '#7038a1';
           toggleAIBtn.style.borderColor = '#d9d0e0';
-          const r = 'IA activada. Ahora puedo responder a cualquier cosa.';
-          addMsg('bot', r);
-          speak(r);
+          addMsg('bot', 'IA activada. Ahora puedo responder a cualquier cosa.');
         } else {
           toggleAIBtn.textContent = '🤖 IA Desactivada';
           toggleAIBtn.style.color = '#b03030';
           toggleAIBtn.style.borderColor = '#e8c8c8';
-          const r = 'IA desactivada. Vuelvo a responder solo con lo aprendido.';
-          addMsg('bot', r);
-          speak(r);
+          addMsg('bot', 'IA desactivada. Vuelvo a responder solo con lo aprendido.');
         }
       });
 
