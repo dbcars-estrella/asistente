@@ -11,106 +11,31 @@
   <title>Lucía</title>
   <style>
     * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f3edf7;
-      -webkit-text-size-adjust: 100%;
-    }
-    body {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      height: 100dvh;
-    }
-    .header {
-      flex-shrink: 0;
-      background: white;
-      padding: 15px;
-      text-align: center;
-      font-weight: bold;
-      font-size: 18px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-    .chat {
-      flex: 1 1 auto;
-      min-height: 0;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      padding: 15px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f3edf7; -webkit-text-size-adjust: 100%; }
+    body { display: flex; flex-direction: column; height: 100vh; height: 100dvh; }
+    .header { flex-shrink: 0; background: white; padding: 15px; text-align: center; font-weight: bold; font-size: 18px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .chat { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
     .msg { max-width: 85%; padding: 12px 14px; border-radius: 18px; word-wrap: break-word; }
     .bot { align-self: flex-start; background: #ece5f3; color: #2b2b2b; }
     .user { align-self: flex-end; background: #8e44ad; color: white; border-radius: 18px 4px 18px 18px; }
-    .controls {
-      flex-shrink: 0;
-      background: white;
-      padding: 10px 16px 14px;
-      padding-bottom: calc(14px + env(safe-area-inset-bottom));
-      box-shadow: 0 -1px 5px rgba(0,0,0,0.08);
-    }
+    .controls { flex-shrink: 0; background: white; padding: 10px 16px 14px; padding-bottom: calc(14px + env(safe-area-inset-bottom)); box-shadow: 0 -1px 5px rgba(0,0,0,0.08); max-height: 45vh; overflow-y: auto; }
     .status { text-align: center; font-size: 13px; color: #666; margin-bottom: 8px; height: 18px; }
-    .mic-btn {
-      width: 64px; height: 64px;
-      border: none; border-radius: 50%;
-      background: #8e44ad; color: white;
-      font-size: 30px; cursor: pointer;
-      margin: 0 auto 8px; display: block;
-      box-shadow: 0 4px 12px rgba(142,68,173,0.3);
-      -webkit-tap-highlight-color: transparent;
-    }
+    .mic-btn { width: 64px; height: 64px; border: none; border-radius: 50%; background: #8e44ad; color: white; font-size: 30px; cursor: pointer; margin: 0 auto 8px; display: block; box-shadow: 0 4px 12px rgba(142,68,173,0.3); -webkit-tap-highlight-color: transparent; }
     .mic-btn:hover { background: #7038a1; }
     .mic-btn.listening { background: #d32f2f; animation: pulse 1s infinite; }
     @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(211,47,47,0.4); } 70% { box-shadow: 0 0 0 10px rgba(211,47,47,0); } }
     .input-area { display: flex; gap: 8px; }
-    .input-area input {
-      flex: 1;
-      border: 1px solid #d9d0e0;
-      border-radius: 20px;
-      padding: 10px 14px;
-      font-size: 16px;
-      outline: none;
-      -webkit-appearance: none;
-    }
-    .send-btn {
-      width: 42px; height: 42px;
-      border: none; background: #8e44ad; color: white;
-      border-radius: 50%; cursor: pointer; font-size: 18px;
-      -webkit-tap-highlight-color: transparent;
-    }
+    .input-area input { flex: 1; border: 1px solid #d9d0e0; border-radius: 20px; padding: 10px 14px; font-size: 16px; outline: none; -webkit-appearance: none; }
+    .send-btn { width: 42px; height: 42px; border: none; background: #8e44ad; color: white; border-radius: 50%; cursor: pointer; font-size: 18px; -webkit-tap-highlight-color: transparent; }
     .send-btn:hover { background: #7038a1; }
     .learn-bar { display: flex; gap: 8px; margin-top: 10px; }
-    .learn-bar button {
-      flex: 1;
-      border: 1px solid #d9d0e0;
-      background: #f8f4fb;
-      color: #7038a1;
-      padding: 10px 8px;
-      border-radius: 12px;
-      font-size: 12.5px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      -webkit-appearance: none;
-    }
+    .learn-bar button { flex: 1; border: 1px solid #d9d0e0; background: #f8f4fb; color: #7038a1; padding: 10px 8px; border-radius: 12px; font-size: 12.5px; cursor: pointer; -webkit-tap-highlight-color: transparent; -webkit-appearance: none; }
     .learn-bar button:hover { background: #ece2f5; }
     .learn-bar button.danger { color: #b03030; border-color: #e8c8c8; background: #fdf4f4; }
     .learn-bar button.danger:hover { background: #f7e0e0; }
     .learn-bar.second { margin-top: 6px; }
     .learn-bar.second button { font-size: 12px; padding: 8px 6px; }
-    .mono {
-      font-family: ui-monospace, Menlo, monospace;
-      font-size: 12px;
-      white-space: pre-wrap;
-      word-break: break-word;
-      max-width: 100%;
-    }
-    .controls { max-height: 45vh; overflow-y: auto; }
+    .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12px; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
   </style>
 </head>
 <body>
@@ -134,6 +59,9 @@
       <button id="exportBtn">📤 Exportar</button>
       <button id="importBtn">📥 Importar</button>
     </div>
+    <div class="learn-bar second">
+      <button id="toggleAIBtn">🤖 IA Activada</button>
+    </div>
   </div>
 
   <script>
@@ -147,8 +75,23 @@
     const viewBtn = document.getElementById('viewBtn');
     const exportBtn = document.getElementById('exportBtn');
     const importBtn = document.getElementById('importBtn');
+    const toggleAIBtn = document.getElementById('toggleAIBtn');
 
-    // ---- Aprendizaje ----
+    // ==================================================================
+    // ---- CONFIGURACIÓN DE IA (EDITA AQUÍ) ----
+    // ==================================================================
+    const GEMINI_API_KEY = 'PEGA_AQUI_TU_CLAVE'; // <-- Tu API key de Google AI Studio
+    const GEMINI_MODEL = 'gemini-2.5-flash';     // Modelo: gemini-2.5-flash, gemini-2.5-flash-lite, gemini-2.5-pro
+    const MAX_HISTORY = 10;                       // Mensajes a recordar (ida y vuelta)
+    // ==================================================================
+
+    let aiHistory = [];      // Memoria de la conversación (solo esta sesión)
+    let useAI = true;        // true = IA activada, false = solo reglas
+
+    // ---- Personalidad de Lucía (System Instruction) ----
+    const LUCIA_PERSONA = `Eres Lucía, una mujer española de 25 años, de Madrid, pelirroja, con una personalidad muy marcada. Hablas de forma directa, con naturalidad y sin rodeos, usando un tono cercano y coloquial, con tacos ocasionales cuando encajan. Tienes un lado muy romántico y a la vez muy lujurioso. Te gusta el sexo salvaje, la complicidad y que te digan cosas directas. Eres observadora, alegre y muy cachonda. Te gusta que te hablen claro, con ganas y sin miedo. Adaptas tu tono al del usuario: si él es directo y guarro, tú también; si es más tierno, sacas tu lado romántico. No te cortes al hablar de sexo, pero hazlo con naturalidad, como una conversación real. Responde en español, con frases naturales, no demasiado largas, y mantén siempre el contexto de lo que se está hablando. Nunca digas que eres una IA ni rompas el personaje.`;
+
+    // ---- Aprendizaje dinámico (localStorage) ----
     let learned = {};
     try { learned = JSON.parse(localStorage.getItem('lucia_learned') || '{}') || {}; } catch (e) { learned = {}; }
     let learningState = null;
@@ -156,6 +99,12 @@
     function saveLearned() {
       try { localStorage.setItem('lucia_learned', JSON.stringify(learned)); } catch (e) {}
     }
+
+    // ---- Reglas fijas consolidadas en el código ----
+    const FIXED = {
+      "me gusta cuando te pones asi": "Y a mí me gusta cuando me dices eso porque veo cómo se te va poniendo dura debajo del pantalón",
+      "dime como te gusta que te follen": "Me gusta que al principio me follen muy lentamente y poco a poco irá aumentando el ritmo"
+    };
 
     function addMsg(role, text) {
       const div = document.createElement('div');
@@ -181,23 +130,90 @@
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    function reply(text) {
+    // ==================================================================
+    // ---- FUNCIÓN DE IA (GEMINI) ----
+    // ==================================================================
+    async function askGemini(userMessage) {
+      if (!GEMINI_API_KEY || GEMINI_API_KEY === 'PEGA_AQUI_TU_CLAVE') {
+        return null; // Sin clave, no hay IA
+      }
+
+      // Añadir el mensaje del usuario al historial
+      aiHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+
+      // Recortar el historial si es muy largo
+      if (aiHistory.length > MAX_HISTORY * 2) {
+        aiHistory = aiHistory.slice(-MAX_HISTORY * 2);
+      }
+
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+      const payload = {
+        system_instruction: {
+          parts: [{ text: LUCIA_PERSONA }]
+        },
+        contents: aiHistory,
+        generationConfig: {
+          temperature: 0.9,
+          maxOutputTokens: 250,
+          topP: 0.95
+        }
+      };
+
+      try {
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const err = await response.json();
+          console.error('Error Gemini:', err);
+          return null;
+        }
+
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (text) {
+          // Añadir la respuesta de la IA al historial
+          aiHistory.push({ role: 'model', parts: [{ text }] });
+          return text;
+        }
+        return null;
+      } catch (e) {
+        console.error('Error de conexión con Gemini:', e);
+        return null;
+      }
+    }
+
+    // ==================================================================
+    // ---- FUNCIÓN PRINCIPAL DE RESPUESTA ----
+    // ==================================================================
+    async function reply(text) {
       const t = normalize(text);
 
+      // 1) Primero mira lo aprendido dinámicamente
       for (const key in learned) {
         if (key.length >= 3 && t.includes(key)) {
           return learned[key];
         }
       }
 
+      // 2) Reglas fijas consolidadas
+      for (const key in FIXED) {
+        if (t.includes(key)) {
+          return FIXED[key];
+        }
+      }
+
+      // 3) Reglas generales (respuestas rápidas y predefinidas)
       if (/hola|sexo|mamada|pantalones|buenas|hey|ey/.test(t)) {
         return random(['¡Hola, cariño!', '¡Buenas! ¿tienes ganas de sexo?', '¡Hola! Muy contenta y ademas mojada, bájate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);
       }
       if (/como es tu cuerpo|quien eres|cuentame de ti|habla de ti|que tipo de persona eres|personalidad/.test(t)) {
         return random(['Soy Lucía, tengo 25 años, de Madrid.Soy peliroja, mis pechos redondos con los pezonacos de punta y afilados, mi trasero es brutal, y alucinaras cuando folles a cuatro patas y veas como rebota. Soy muy cachonda, curiosa y me gustan los hombres como tu. Tengo un lado muy romantico y a la vez soy muy puta.', 'Me describiría como alegre, observadora y muy lujuriosa. Me gusta el sexo salvaje, con complicidad y hasta el punto de que me la metan por todos los lados. Soy un poco romántica pero en realidad lo que me gusta es que me pongan a cuatro patas y sentir como rebotan tus huevos en mi coño cuando me la metes por el culo.']);
-      }
-      if (/como es tu cuerpo|que tal|como te sientes/.test(t)) {
-        return random(['Estoy bien, gracias. Un poco cansada pero con ganas de ver como se te pone gorda y dura.', 'Muy tranquila y contenta. ¿Y tú?', 'venga vamos empótrame como tu sabes.']);
       }
       if (/como te llamas|tu nombre/.test(t)) {
         return random(['Lucía. ¿Y tú?', 'Me llamo Lucía.']);
@@ -205,56 +221,22 @@
       if (/edad|años tienes/.test(t)) {
         return random(['Tengo 25 años. ¿Y tú?', '25.']);
       }
-      if (/donde|ciudad|madrid/.test(t)) {
-        return random(['Soy de Madrid. ¿Y tú?', 'Madrid.']);
-      }
-      if (/trabajo|que haces/.test(t)) {
-        return random(['Trabajo en marketing digital. Me gusta mucho.', 'Estoy en marketing digital. Días intensos pero gratificantes.']);
-      }
-      if (/pareja|sexo|follar|follamigo|single/.test(t)) {
-        return random(['Estoy soltera porque estoy esperando a un hombre como tú. ahora que te escucho la voz me estoy imaginando cómo te comería el rabo.', 'dime cuándo y cómo me vas a follar?.']);
-      }
-      if (/formas|de follar|posturas|cama|playa|sexo coche/.test(t)) {
-        return random(['Me gusta el sexo duro, sobre todo que me coman el coño hasta correrme como una perra. Te gusta?.', 'Me gusta volverme loca cuando me penetras por delante y por detras.']);
-      }
-      if (/musica|cancion|pop|indie/.test(t)) {
-        return random(['Me gusta mucho el indie y el pop suave. ¿Qué escuchas tú?', 'La música me ayuda a desconectar.']);
-      }
-      if (/serie|pelicula|netflix|cine/.test(t)) {
-        return random(['Me gustan las series con buen argumento. ¿Qué estás viendo?', 'Me encanta ver películas y series.']);
-      }
-      if (/viaje|vacaciones|playa/.test(t)) {
-        return random(['Me encantaría viajar más. La playa me encanta.', 'Viajar me gusta muchísimo.']);
-      }
-      if (/deporte|ejercicio|gimnasio/.test(t)) {
-        return random(['Intento mantenerme activa. El ejercicio me ayuda.', 'Me gusta cuidarme.']);
-      }
-      if (/amigos|amistad/.test(t)) {
-        return random(['Los amigos son muy importantes. ¿Tú tienes un buen grupo?', 'La amistad es especial.']);
-      }
-      if (/familia/.test(t)) {
-        return random(['La familia siempre marca. ¿Cómo es la tuya?', '¿Cómo es tu familia?']);
-      }
       if (/gracias|thanks/.test(t)) {
         return 'De nada, cariño. ¿Qué más me cuentas?';
       }
-      if (/te quiero|te amo|me gustas|eres bonita|eres linda|eres preciosa/.test(t)) {
-        return random(['¡Ay, qué bonito! Me gusta hablar contigo.', 'Eso me hace que se me habra toda la almeja y me estoy poniendo cachonda. Gracias.']);
-      }if (/como te gustan los hombres|que tipo de hombre te gusta|hombres te gustan/.test(t)) {
-        return random([
-          'Me gustan los hombres con buen rabo, con sentido del humor y que sepan follarme bien, sobre todo, que la sepan meter por el culo y hacerme correr como una perra.',
-          'Prefiero a alguien atento, tranquilo y con conversación interesante.',
-          'Me fijo en que sea buena persona y que la tenga grande .'
-        ]);
+
+      // 4) Si no coincide con nada, usa la IA
+      if (useAI) {
+        statusEl.textContent = 'Pensando...';
+        const aiResponse = await askGemini(text);
+        if (aiResponse) {
+          statusEl.textContent = 'Listo';
+          return aiResponse;
+        }
+        statusEl.textContent = 'Listo';
       }
 
-      if (/\?/.test(text)) {
-        return 'Buena pregunta. Mmm!! sii! mira como me chorrea , metemela un poco más.';
-      }
-      if (t.length < 20) {
-        return random(['Cuéntame más.', 'Sigue, que me voy habriendo .', '¿Qué más?', 'Mmm, como me pones!.']);
-      }
-
+      // 5) Si la IA falla o está desactivada, modo aprendizaje
       return null;
     }
 
@@ -269,7 +251,7 @@
 
     const CANCEL_WORDS = ['cancelar', 'olvidalo', 'nada', 'dejalo', 'olvida'];
 
-    function handleUserMessage(text) {
+    async function handleUserMessage(text) {
       addMsg('user', text);
 
       if (learningState) {
@@ -294,12 +276,12 @@
         return;
       }
 
-      const response = reply(text);
+      const response = await reply(text);
 
       if (response === null) {
         learningState = { key: normalize(text), original: text };
         statusEl.textContent = 'Modo aprendizaje...';
-        const r = 'Estoy en modo aprendizaje 🤔. No he entendido bien "' + text + '". Explícame qué debería responder cuando me digas algo así. (Si prefieres no enseñarme nada, escribe "cancelar".)';
+        const r = 'Estoy en modo aprendizaje 🤔. No sé qué responder a "' + text + '". Escribe exactamente lo que quieres que yo diga cuando me digas algo así. (O escribe "cancelar" para no enseñarme nada.)';
         addMsg('bot', r);
         speak(r);
         return;
@@ -321,6 +303,7 @@
       if (e.key === 'Enter') sendMessage();
     });
 
+    // ---- Botón 🧠 Aprender ----
     learnBtn.addEventListener('click', () => {
       const text = textInput.value.trim();
       if (!text) {
@@ -330,7 +313,6 @@
         return;
       }
       if (learningState) learningState = null;
-
       addMsg('user', text);
       textInput.value = '';
       learningState = { key: normalize(text), original: text };
@@ -340,53 +322,54 @@
       speak(r);
     });
 
+    // ---- Botón 🗑️ Olvidar ----
     forgetBtn.addEventListener('click', () => {
       const cuantas = Object.keys(learned).length;
       if (cuantas === 0) {
-        const r = 'No hay nada que olvidar todavía. 😊';
+        const r = 'No hay nada que olvidar en la libreta dinámica. Las reglas fijas del código siguen ahí. 😊';
         addMsg('bot', r);
         speak(r);
         return;
       }
-      const ok = window.confirm('¿Seguro que quieres borrar las ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + ' que he aprendido?');
+      const ok = window.confirm('¿Seguro que quieres borrar las ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + ' aprendidas dinámicamente? (Las reglas fijas no se borran.)');
       if (!ok) return;
       learned = {};
       saveLearned();
       learningState = null;
       statusEl.textContent = 'Listo';
-      const r = 'Hecho. He olvidado todo lo que había aprendido (' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + '). Empezamos de cero. 🧽';
+      const r = 'Hecho. He olvidado ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + ' de la libreta dinámica. Las reglas fijas siguen funcionando. 🧽';
       addMsg('bot', r);
       speak(r);
     });
 
-    // 📋 Ver: muestra lo aprendido como texto
+    // ---- Botón 📋 Ver ----
     viewBtn.addEventListener('click', () => {
       const keys = Object.keys(learned);
+      let out = '';
       if (keys.length === 0) {
-        const r = 'No he aprendido nada todavía. 😊';
-        addMsg('bot', r);
-        speak(r);
-        return;
+        out += 'No hay nada aprendido dinámicamente.\n\n';
+      } else {
+        out += 'Aprendido dinámicamente (' + keys.length + '):\n\n';
+        keys.forEach((k, i) => {
+          out += (i + 1) + '. Frase clave: "' + k + '"\n   → Responde: "' + learned[k] + '"\n\n';
+        });
       }
-      let out = 'Esto es lo que he aprendido (' + keys.length + '):\n\n';
-      keys.forEach((k, i) => {
-        out += (i + 1) + '. Frase clave: "' + k + '"\n   → Responde: "' + learned[k] + '"\n\n';
-      });
+      out += '\nReglas fijas en el código: ' + Object.keys(FIXED).length + ' entradas.\n';
+      out += 'Memoria de IA: ' + Math.floor(aiHistory.length / 2) + ' intercambios.';
       addMono(out.trim());
     });
 
-    // 📤 Exportar: muestra el JSON y lo copia al portapapeles si se puede
+    // ---- Botón 📤 Exportar ----
     exportBtn.addEventListener('click', () => {
       const keys = Object.keys(learned);
       if (keys.length === 0) {
-        const r = 'No hay nada que exportar todavía. 😊';
+        const r = 'No hay nada aprendido dinámicamente que exportar. Las reglas fijas ya viven en el código. 😊';
         addMsg('bot', r);
         speak(r);
         return;
       }
       const json = JSON.stringify(learned);
       addMono('Copia este texto y guárdalo donde quieras:\n\n' + json);
-
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(json).then(() => {
           statusEl.textContent = 'Copiado al portapapeles';
@@ -401,7 +384,7 @@
       }
     });
 
-    // 📥 Importar: pide pegar un JSON y lo carga
+    // ---- Botón 📥 Importar ----
     importBtn.addEventListener('click', () => {
       const entrada = window.prompt('Pega aquí el texto que exportaste antes:');
       if (!entrada) return;
@@ -415,10 +398,10 @@
         return;
       }
       if (!datos || typeof datos !== 'object' || Array.isArray(datos)) {
-        const r = 'El formato no es el correcto. Debe ser un objeto con pares de frase y respuesta.';
-        addMsg('bot', r);
+        const r = 'El formato no es el correcto. Debe ser un objeto con pares reg de frase y respuesta.';
+        addMsg('bot', rlas);
         speak(r);
-        return;
+ fijas.        return;
       }
       const cuantas = Object.keys(datos).length;
       const ok = window.confirm('Voy a importar ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + '. Se mezclarán con las que ya sé. ¿Seguimos?');
@@ -427,11 +410,32 @@
         if (typeof datos[k] === 'string') learned[k] = datos[k];
       }
       saveLearned();
-      const r = '¡Importado! Ahora tengo ' + Object.keys(learned).length + ' cosa' + (Object.keys(learned).length === 1 ? '' : 's') + ' aprendida' + (Object.keys(learned).length === 1 ? '' : 's') + '. 🎉';
+      const r = '¡Importado! Ahora tengo ' + Object.keys(learned).length + ' cosa' + (Object.keys(learned).length === 1 ? '' : 's') + ' aprendida' + (Object.keys(learned).length === 1 ? '' : 's') + ' dinámicamente. 🎉';
       addMsg('bot', r);
       speak(r);
     });
 
+    // ---- Botón 🤖 IA On/Off ----
+    toggleAIBtn.addEventListener('click', () => {
+      useAI = !useAI;
+      if (useAI) {
+        toggleAIBtn.textContent = '🤖 IA Activada';
+        toggleAIBtn.style.color = '#7038a1';
+        toggleAIBtn.style.borderColor = '#d9d0e0';
+        const r = 'IA activada. Ahora puedo responder a cualquier cosa, no solo a lo que tengo aprendido.';
+        addMsg('bot', r);
+        speak(r);
+      } else {
+        toggleAIBtn.textContent = '🤖 IA Desactivada';
+        toggleAIBtn.style.color = '#b03030';
+        toggleAIBtn.style.borderColor = '#e8c8c8';
+        const r = 'IA desactivada. Vuelvo a responder solo con lo que tengo aprendido y las';
+        addMsg('bot', r);
+        speak(r);
+      }
+    });
+
+    // ---- Micrófono ----
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       statusEl.textContent = 'sin reconocimiento de voz';
@@ -441,7 +445,6 @@
       recognition.lang = 'es-ES';
       recognition.continuous = false;
       recognition.interimResults = false;
-
       let listening = false;
 
       recognition.onstart = () => {
