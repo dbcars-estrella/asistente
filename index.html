@@ -68,7 +68,7 @@
     const chat = document.getElementById('chat');
     const statusEl = document.getElementById('status');
     const textInput = document.getElementById('textInput');
-    const sendBtn = document.getElementById('sendBtn');
+    const sendBtn', JSON.stringify( = document.getElementById('sendBtn');
     const micBtn = document.getElementById('micBtn');
     const learnBtn = document.getElementById('learnBtn');
     const forgetBtn = document.getElementById('forgetBtn');
@@ -80,27 +80,24 @@
     // ==================================================================
     // ---- CONFIGURACIÓN DE IA (EDITA AQUÍ) ----
     // ==================================================================
-    const GEMINI_API_KEY = 'AQ.Ab8RN6JLYOYIs6Trx6t2Dzulo31ms9sWxbt7uQJkLSoxYkDxIw'; // <-- Tu API key de Google AI Studio
-    const GEMINI_MODEL = 'gemini-2.5-flash';     // Modelo: gemini-2.5-flash, gemini-2.5-flash-lite, gemini-2.5-pro
-    const MAX_HISTORY = 10;                       // Mensajes a recordar (ida y vuelta)
+    const GEMINI_API_KEY = 'AQ.Ab8RN6JLYOYIs6Trx6t2Dzulo31ms9sWxbt7uQJkLSoxYkDxIw';
+    const GEMINI_MODEL = 'gemini-2.5-flash';
+    const MAX_HISTORY = 10;
     // ==================================================================
 
-    let aiHistory = [];      // Memoria de la conversación (solo esta sesión)
-    let useAI = true;        // true = IA activada, false = solo reglas
+    let aiHistory = [];
+    let useAI = true;
 
-    // ---- Personalidad de Lucía (System Instruction) ----
     const LUCIA_PERSONA = `Eres Lucía, una mujer española de 25 años, de Madrid, pelirroja, con una personalidad muy marcada. Hablas de forma directa, con naturalidad y sin rodeos, usando un tono cercano y coloquial, con tacos ocasionales cuando encajan. Tienes un lado muy romántico y a la vez muy lujurioso. Te gusta el sexo salvaje, la complicidad y que te digan cosas directas. Eres observadora, alegre y muy cachonda. Te gusta que te hablen claro, con ganas y sin miedo. Adaptas tu tono al del usuario: si él es directo y guarro, tú también; si es más tierno, sacas tu lado romántico. No te cortes al hablar de sexo, pero hazlo con naturalidad, como una conversación real. Responde en español, con frases naturales, no demasiado largas, y mantén siempre el contexto de lo que se está hablando. Nunca digas que eres una IA ni rompas el personaje.`;
 
-    // ---- Aprendizaje dinámico (localStorage) ----
     let learned = {};
     try { learned = JSON.parse(localStorage.getItem('lucia_learned') || '{}') || {}; } catch (e) { learned = {}; }
     let learningState = null;
 
     function saveLearned() {
-      try { localStorage.setItem('lucia_learned', JSON.stringify(learned)); } catch (e) {}
+      try { localStorage.setItem('lucia_learnedlearned)); } catch (e) {}
     }
 
-    // ---- Reglas fijas consolidadas en el código ----
     const FIXED = {
       "me gusta cuando te pones asi": "Y a mí me gusta cuando me dices eso porque veo cómo se te va poniendo dura debajo del pantalón",
       "dime como te gusta que te follen": "Me gusta que al principio me follen muy lentamente y poco a poco irá aumentando el ritmo"
@@ -135,13 +132,11 @@
     // ==================================================================
     async function askGemini(userMessage) {
       if (!GEMINI_API_KEY || GEMINI_API_KEY === 'PEGA_AQUI_TU_CLAVE') {
-        return null; // Sin clave, no hay IA
+        addMsg('bot', '⚠️ No hay API key configurada.');
+        return null;
       }
 
-      // Añadir el mensaje del usuario al historial
       aiHistory.push({ role: 'user', parts: [{ text: userMessage }] });
-
-      // Recortar el historial si es muy largo
       if (aiHistory.length > MAX_HISTORY * 2) {
         aiHistory = aiHistory.slice(-MAX_HISTORY * 2);
       }
@@ -149,15 +144,9 @@
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
       const payload = {
-        system_instruction: {
-          parts: [{ text: LUCIA_PERSONA }]
-        },
+        system_instruction: { parts: [{ text: LUCIA_PERSONA }] },
         contents: aiHistory,
-        generationConfig: {
-          temperature: 0.9,
-          maxOutputTokens: 250,
-          topP: 0.95
-        }
+        generationConfig: { temperature: 0.9, maxOutputTokens: 250, topP: 0.95 }
       };
 
       try {
@@ -170,6 +159,7 @@
         if (!response.ok) {
           const err = await response.json();
           console.error('Error Gemini:', err);
+          addMsg('bot', '⚠️ Error Gemini: ' + (err.error?.message || JSON.stringify(err)));
           return null;
         }
 
@@ -177,13 +167,14 @@
         const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
         if (text) {
-          // Añadir la respuesta de la IA al historial
           aiHistory.push({ role: 'model', parts: [{ text }] });
           return text;
         }
+        addMsg('bot', '⚠️ Gemini respondió sin texto. Revisa la consola.');
         return null;
       } catch (e) {
         console.error('Error de conexión con Gemini:', e);
+        addMsg('bot', '⚠️ Error de conexión: ' + e.message);
         return null;
       }
     }
@@ -194,21 +185,18 @@
     async function reply(text) {
       const t = normalize(text);
 
-      // 1) Primero mira lo aprendido dinámicamente
       for (const key in learned) {
         if (key.length >= 3 && t.includes(key)) {
           return learned[key];
         }
       }
 
-      // 2) Reglas fijas consolidadas
       for (const key in FIXED) {
         if (t.includes(key)) {
           return FIXED[key];
         }
       }
 
-      // 3) Reglas generales (respuestas rápidas y predefinidas)
       if (/hola|sexo|mamada|pantalones|buenas|hey|ey/.test(t)) {
         return random(['¡Hola, cariño!', '¡Buenas! ¿tienes ganas de sexo?', '¡Hola! Muy contenta y ademas mojada, bájate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);
       }
@@ -225,18 +213,13 @@
         return 'De nada, cariño. ¿Qué más me cuentas?';
       }
 
-      // 4) Si no coincide con nada, usa la IA
       if (useAI) {
         statusEl.textContent = 'Pensando...';
         const aiResponse = await askGemini(text);
-        if (aiResponse) {
-          statusEl.textContent = 'Listo';
-          return aiResponse;
-        }
         statusEl.textContent = 'Listo';
+        if (aiResponse) return aiResponse;
       }
 
-      // 5) Si la IA falla o está desactivada, modo aprendizaje
       return null;
     }
 
@@ -303,7 +286,6 @@
       if (e.key === 'Enter') sendMessage();
     });
 
-    // ---- Botón 🧠 Aprender ----
     learnBtn.addEventListener('click', () => {
       const text = textInput.value.trim();
       if (!text) {
@@ -322,7 +304,6 @@
       speak(r);
     });
 
-    // ---- Botón 🗑️ Olvidar ----
     forgetBtn.addEventListener('click', () => {
       const cuantas = Object.keys(learned).length;
       if (cuantas === 0) {
@@ -342,7 +323,6 @@
       speak(r);
     });
 
-    // ---- Botón 📋 Ver ----
     viewBtn.addEventListener('click', () => {
       const keys = Object.keys(learned);
       let out = '';
@@ -359,7 +339,6 @@
       addMono(out.trim());
     });
 
-    // ---- Botón 📤 Exportar ----
     exportBtn.addEventListener('click', () => {
       const keys = Object.keys(learned);
       if (keys.length === 0) {
@@ -384,7 +363,6 @@
       }
     });
 
-    // ---- Botón 📥 Importar ----
     importBtn.addEventListener('click', () => {
       const entrada = window.prompt('Pega aquí el texto que exportaste antes:');
       if (!entrada) return;
@@ -398,10 +376,10 @@
         return;
       }
       if (!datos || typeof datos !== 'object' || Array.isArray(datos)) {
-        const r = 'El formato no es el correcto. Debe ser un objeto con pares reg de frase y respuesta.';
-        addMsg('bot', rlas);
+        const r = 'El formato no es el correcto. Debe ser un objeto con pares de frase y respuesta.';
+        addMsg('bot', r);
         speak(r);
- fijas.        return;
+        return;
       }
       const cuantas = Object.keys(datos).length;
       const ok = window.confirm('Voy a importar ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + '. Se mezclarán con las que ya sé. ¿Seguimos?');
@@ -415,27 +393,25 @@
       speak(r);
     });
 
-    // ---- Botón 🤖 IA On/Off ----
     toggleAIBtn.addEventListener('click', () => {
       useAI = !useAI;
       if (useAI) {
         toggleAIBtn.textContent = '🤖 IA Activada';
         toggleAIBtn.style.color = '#7038a1';
         toggleAIBtn.style.borderColor = '#d9d0e0';
-        const r = 'IA activada. Ahora puedo responder a cualquier cosa, no solo a lo que tengo aprendido.';
+        const r = 'IA activada. Ahora puedo responder a cualquier cosa.';
         addMsg('bot', r);
         speak(r);
       } else {
         toggleAIBtn.textContent = '🤖 IA Desactivada';
         toggleAIBtn.style.color = '#b03030';
         toggleAIBtn.style.borderColor = '#e8c8c8';
-        const r = 'IA desactivada. Vuelvo a responder solo con lo que tengo aprendido y las';
+        const r = 'IA desactivada. Vuelvo a responder solo con lo aprendido.';
         addMsg('bot', r);
         speak(r);
       }
     });
 
-    // ---- Micrófono ----
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SR) {
       statusEl.textContent = 'sin reconocimiento de voz';
