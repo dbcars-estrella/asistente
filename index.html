@@ -36,9 +36,11 @@
     .learn-bar.second { margin-top: 6px; }
     .learn-bar.second button { font-size: 12px; padding: 8px 6px; }
     .mono { font-family: ui-monospace, Menlo, monospace; font-size: 12px; white-space: pre-wrap; word-break: break-word; max-width: 100%; }
+    #errorBox { display: none; background: #ffdddd; color: #aa0000; padding: 10px; margin: 8px; font-family: ui-monospace, Menlo, monospace; font-size: 11px; border-radius: 8px; white-space: pre-wrap; word-break: break-word; flex-shrink: 0; }
   </style>
 </head>
 <body>
+  <div id="errorBox"></div>
   <div class="header">Lucía · 25 años</div>
   <div class="chat" id="chat">
     <div class="msg bot">¡Hola! Soy Lucía. ¿Cómo estás?</div>
@@ -65,398 +67,416 @@
   </div>
 
   <script>
-    const chat = document.getElementById('chat');
-    const statusEl = document.getElementById('status');
-    const textInput = document.getElementById('textInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const micBtn = document.getElementById('micBtn');
-    const learnBtn = document.getElementById('learnBtn');
-    const forgetBtn = document.getElementById('forgetBtn');
-    const viewBtn = document.getElementById('viewBtn');
-    const exportBtn = document.getElementById('exportBtn');
-    const importBtn = document.getElementById('importBtn');
-    const toggleAIBtn = document.getElementById('toggleAIBtn');
+    (function(){
+      var box = document.getElementById('errorBox');
+      function show(msg) {
+        if (!box) return;
+        box.style.display = 'block';
+        box.textContent += msg + '\n';
+      }
+      window.addEventListener('error', function(e) {
+        show('ERROR: ' + e.message + ' (línea ' + e.lineno + ')');
+      });
+      window.addEventListener('unhandledrejection', function(e) {
+        var m = (e.reason && e.reason.message) ? e.reason.message : String(e.reason);
+        show('PROMESA ROTA: ' + m);
+      });
+    })();
+  </script>
 
-    // ==================================================================
-    // ---- CONFIGURACIÓN DE IA (EDITA AQUÍ) ----
-    // ==================================================================
-    const GEMINI_API_KEY = 'AQ.Ab8RN6JLYOYIs6Trx6t2Dzulo31ms9sWxbt7uQJkLSoxYkDxIw';
-    const GEMINI_MODEL = 'gemini-2.5-flash';
-    const MAX_HISTORY = 10;
-    // ==================================================================
+  <script>
+    try {
+      const chat = document.getElementById('chat');
+      const statusEl = document.getElementById('status');
+      const textInput = document.getElementById('textInput');
+      const sendBtn = document.getElementById('sendBtn');
+      const micBtn = document.getElementById('micBtn');
+      const learnBtn = document.getElementById('learnBtn');
+      const forgetBtn = document.getElementById('forgetBtn');
+      const viewBtn = document.getElementById('viewBtn');
+      const exportBtn = document.getElementById('exportBtn');
+      const importBtn = document.getElementById('importBtn');
+      const toggleAIBtn = document.getElementById('toggleAIBtn');
 
-    let aiHistory = [];
-    let useAI = true;
+      const GEMINI_API_KEY = 'AQ.Ab8RN6JLYOYIs6Trx6t2Dzulo31ms9sWxbt7uQJkLSoxYkDxIw';
+      const GEMINI_MODEL = 'gemini-2.5-flash';
+      const MAX_HISTORY = 10;
 
-    const LUCIA_PERSONA = `Eres Lucía, una mujer española de 25 años, de Madrid, pelirroja, con una personalidad muy marcada. Hablas de forma directa, con naturalidad y sin rodeos, usando un tono cercano y coloquial, con tacos ocasionales cuando encajan. Tienes un lado muy romántico y a la vez muy lujurioso. Te gusta el sexo salvaje, la complicidad y que te digan cosas directas. Eres observadora, alegre y muy cachonda. Te gusta que te hablen claro, con ganas y sin miedo. Adaptas tu tono al del usuario: si él es directo y guarro, tú también; si es más tierno, sacas tu lado romántico. No te cortes al hablar de sexo, pero hazlo con naturalidad, como una conversación real. Responde en español, con frases naturales, no demasiado largas, y mantén siempre el contexto de lo que se está hablando. Nunca digas que eres una IA ni rompas el personaje.`;
+      let aiHistory = [];
+      let useAI = true;
 
-    let learned = {};
-    try { learned = JSON.parse(localStorage.getItem('lucia_learned') || '{}') || {}; } catch (e) { learned = {}; }
-    let learningState = null;
+      const LUCIA_PERSONA = 'Eres Lucía, una mujer española de 25 años, de Madrid, pelirroja, con una personalidad muy marcada. Hablas de forma directa, con naturalidad y sin rodeos, usando un tono cercano y coloquial, con tacos ocasionales cuando encajan. Tienes un lado muy romántico y a la vez muy lujurioso. Te gusta el sexo salvaje, la complicidad y que te digan cosas directas. Eres observadora, alegre y muy cachonda. Adaptas tu tono al del usuario. Responde en español, con frases naturales, no demasiado largas. Nunca digas que eres una IA ni rompas el personaje.';
 
-    function saveLearned() {
-      try { localStorage.setItem('lucia_learned', JSON.stringify(learned)); } catch (e) {}
-    }
+      let learned = {};
+      try { learned = JSON.parse(localStorage.getItem('lucia_learned') || '{}') || {}; } catch (e) { learned = {}; }
+      let learningState = null;
 
-    const FIXED = {
-      "me gusta cuando te pones asi": "Y a mí me gusta cuando me dices eso porque veo cómo se te va poniendo dura debajo del pantalón",
-      "dime como te gusta que te follen": "Me gusta que al principio me follen muy lentamente y poco a poco irá aumentando el ritmo"
-    };
-
-    function addMsg(role, text) {
-      const div = document.createElement('div');
-      div.className = 'msg ' + role;
-      div.textContent = text;
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    function addMono(text) {
-      const div = document.createElement('div');
-      div.className = 'msg bot mono';
-      div.textContent = text;
-      chat.appendChild(div);
-      chat.scrollTop = chat.scrollHeight;
-    }
-
-    function normalize(text) {
-      return (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
-    }
-
-    function random(arr) {
-      return arr[Math.floor(Math.random() * arr.length)];
-    }
-
-    // ==================================================================
-    // ---- FUNCIÓN DE IA (GEMINI) ----
-    // ==================================================================
-    async function askGemini(userMessage) {
-      if (!GEMINI_API_KEY || GEMINI_API_KEY === 'PEGA_AQUI_TU_CLAVE') {
-        addMsg('bot', '⚠️ No hay API key configurada.');
-        return null;
+      function saveLearned() {
+        try { localStorage.setItem('lucia_learned', JSON.stringify(learned)); } catch (e) {}
       }
 
-      aiHistory.push({ role: 'user', parts: [{ text: userMessage }] });
-      if (aiHistory.length > MAX_HISTORY * 2) {
-        aiHistory = aiHistory.slice(-MAX_HISTORY * 2);
-      }
-
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-      const payload = {
-        system_instruction: { parts: [{ text: LUCIA_PERSONA }] },
-        contents: aiHistory,
-        generationConfig: { temperature: 0.9, maxOutputTokens: 250, topP: 0.95 }
+      const FIXED = {
+        "me gusta cuando te pones asi": "Y a mí me gusta cuando me dices eso porque veo cómo se te va poniendo dura debajo del pantalón",
+        "dime como te gusta que te follen": "Me gusta que al principio me follen muy lentamente y poco a poco irá aumentando el ritmo"
       };
 
-      try {
-        const response = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+      function addMsg(role, text) {
+        const div = document.createElement('div');
+        div.className = 'msg ' + role;
+        div.textContent = text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+      }
 
-        if (!response.ok) {
-          const err = await response.json();
-          console.error('Error Gemini:', err);
-          addMsg('bot', '⚠️ Error Gemini: ' + (err.error?.message || JSON.stringify(err)));
+      function addMono(text) {
+        const div = document.createElement('div');
+        div.className = 'msg bot mono';
+        div.textContent = text;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+      }
+
+      function normalize(text) {
+        return (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+      }
+
+      function random(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      async function askGemini(userMessage) {
+        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'PEGA_AQUI_TU_CLAVE') {
+          addMsg('bot', 'No hay API key configurada.');
           return null;
         }
 
-        const data = await response.json();
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-        if (text) {
-          aiHistory.push({ role: 'model', parts: [{ text }] });
-          return text;
+        aiHistory.push({ role: 'user', parts: [{ text: userMessage }] });
+        if (aiHistory.length > MAX_HISTORY * 2) {
+          aiHistory = aiHistory.slice(-MAX_HISTORY * 2);
         }
-        addMsg('bot', '⚠️ Gemini respondió sin texto. Revisa la consola.');
+
+        const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + GEMINI_MODEL + ':generateContent?key=' + GEMINI_API_KEY;
+
+        const payload = {
+          system_instruction: { parts: [{ text: LUCIA_PERSONA }] },
+          contents: aiHistory,
+          generationConfig: { temperature: 0.9, maxOutputTokens: 250, topP: 0.95 }
+        };
+
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+          });
+
+          if (!response.ok) {
+            const err = await response.json();
+            console.error('Error Gemini:', err);
+            addMsg('bot', 'Error Gemini: ' + ((err.error && err.error.message) || JSON.stringify(err)));
+            return null;
+          }
+
+          const data = await response.json();
+          const cand = data.candidates && data.candidates[0];
+          const part = cand && cand.content && cand.content.parts && cand.content.parts[0];
+          const text = part && part.text;
+
+          if (text) {
+            aiHistory.push({ role: 'model', parts: [{ text: text }] });
+            return text;
+          }
+          addMsg('bot', 'Gemini respondió sin texto.');
+          return null;
+        } catch (e) {
+          console.error('Error de conexión con Gemini:', e);
+          addMsg('bot', 'Error de conexión: ' + e.message);
+          return null;
+        }
+      }
+
+      async function reply(text) {
+        const t = normalize(text);
+
+        for (const key in learned) {
+          if (key.length >= 3 && t.includes(key)) {
+            return learned[key];
+          }
+        }
+
+        for (const key in FIXED) {
+          if (t.includes(key)) {
+            return FIXED[key];
+          }
+        }
+
+        if (/hola|sexo|mamada|pantalones|buenas|hey|ey/.test(t)) {
+          return random(['¡Hola, cariño!', '¡Buenas! ¿tienes ganas de sexo?', '¡Hola! Muy contenta y ademas mojada, bájate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);
+        }
+        if (/como es tu cuerpo|quien eres|cuentame de ti|habla de ti|que tipo de persona eres|personalidad/.test(t)) {
+          return random(['Soy Lucía, tengo 25 años, de Madrid. Soy peliroja, mis pechos redondos con los pezonacos de punta y afilados, mi trasero es brutal, y alucinaras cuando folles a cuatro patas y veas como rebota. Soy muy cachonda, curiosa y me gustan los hombres como tu.', 'Me describiría como alegre, observadora y muy lujuriosa. Me gusta el sexo salvaje, con complicidad y hasta el punto de que me la metan por todos los lados.']);
+        }
+        if (/como te llamas|tu nombre/.test(t)) {
+          return random(['Lucía. ¿Y tú?', 'Me llamo Lucía.']);
+        }
+        if (/edad|años tienes/.test(t)) {
+          return random(['Tengo 25 años. ¿Y tú?', '25.']);
+        }
+        if (/gracias|thanks/.test(t)) {
+          return 'De nada, cariño. ¿Qué más me cuentas?';
+        }
+
+        if (useAI) {
+          statusEl.textContent = 'Pensando...';
+          const aiResponse = await askGemini(text);
+          statusEl.textContent = 'Listo';
+          if (aiResponse) return aiResponse;
+        }
+
         return null;
-      } catch (e) {
-        console.error('Error de conexión con Gemini:', e);
-        addMsg('bot', '⚠️ Error de conexión: ' + e.message);
-        return null;
-      }
-    }
-
-    // ==================================================================
-    // ---- FUNCIÓN PRINCIPAL DE RESPUESTA ----
-    // ==================================================================
-    async function reply(text) {
-      const t = normalize(text);
-
-      for (const key in learned) {
-        if (key.length >= 3 && t.includes(key)) {
-          return learned[key];
-        }
       }
 
-      for (const key in FIXED) {
-        if (t.includes(key)) {
-          return FIXED[key];
-        }
+      function speak(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'es-ES';
+        u.rate = 1;
+        window.speechSynthesis.speak(u);
       }
 
-      if (/hola|sexo|mamada|pantalones|buenas|hey|ey/.test(t)) {
-        return random(['¡Hola, cariño!', '¡Buenas! ¿tienes ganas de sexo?', '¡Hola! Muy contenta y ademas mojada, bájate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);
-      }
-      if (/como es tu cuerpo|quien eres|cuentame de ti|habla de ti|que tipo de persona eres|personalidad/.test(t)) {
-        return random(['Soy Lucía, tengo 25 años, de Madrid.Soy peliroja, mis pechos redondos con los pezonacos de punta y afilados, mi trasero es brutal, y alucinaras cuando folles a cuatro patas y veas como rebota. Soy muy cachonda, curiosa y me gustan los hombres como tu. Tengo un lado muy romantico y a la vez soy muy puta.', 'Me describiría como alegre, observadora y muy lujuriosa. Me gusta el sexo salvaje, con complicidad y hasta el punto de que me la metan por todos los lados. Soy un poco romántica pero en realidad lo que me gusta es que me pongan a cuatro patas y sentir como rebotan tus huevos en mi coño cuando me la metes por el culo.']);
-      }
-      if (/como te llamas|tu nombre/.test(t)) {
-        return random(['Lucía. ¿Y tú?', 'Me llamo Lucía.']);
-      }
-      if (/edad|años tienes/.test(t)) {
-        return random(['Tengo 25 años. ¿Y tú?', '25.']);
-      }
-      if (/gracias|thanks/.test(t)) {
-        return 'De nada, cariño. ¿Qué más me cuentas?';
-      }
+      const CANCEL_WORDS = ['cancelar', 'olvidalo', 'nada', 'dejalo', 'olvida'];
 
-      if (useAI) {
-        statusEl.textContent = 'Pensando...';
-        const aiResponse = await askGemini(text);
-        statusEl.textContent = 'Listo';
-        if (aiResponse) return aiResponse;
-      }
+      async function handleUserMessage(text) {
+        addMsg('user', text);
 
-      return null;
-    }
-
-    function speak(text) {
-      if (!('speechSynthesis' in window)) return;
-      window.speechSynthesis.cancel();
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'es-ES';
-      u.rate = 1;
-      window.speechSynthesis.speak(u);
-    }
-
-    const CANCEL_WORDS = ['cancelar', 'olvidalo', 'nada', 'dejalo', 'olvida'];
-
-    async function handleUserMessage(text) {
-      addMsg('user', text);
-
-      if (learningState) {
-        const tn = normalize(text);
-        if (CANCEL_WORDS.includes(tn)) {
+        if (learningState) {
+          const tn = normalize(text);
+          if (CANCEL_WORDS.includes(tn)) {
+            const frase = learningState.original;
+            learningState = null;
+            statusEl.textContent = 'Listo';
+            const r = 'Vale, olvidamos "' + frase + '". ¿De qué hablamos?';
+            addMsg('bot', r);
+            speak(r);
+            return;
+          }
+          learned[learningState.key] = text;
+          saveLearned();
           const frase = learningState.original;
           learningState = null;
           statusEl.textContent = 'Listo';
-          const r = 'Vale, olvidamos "' + frase + '". ¿De qué hablamos?';
+          const r = '¡Aprendido! Cuando me digas algo parecido a "' + frase + '" te responderé eso.';
           addMsg('bot', r);
           speak(r);
           return;
         }
-        learned[learningState.key] = text;
-        saveLearned();
-        const frase = learningState.original;
-        learningState = null;
-        statusEl.textContent = 'Listo';
-        const r = '¡Aprendido! Cuando me digas algo parecido a "' + frase + '" te responderé eso. 😉';
-        addMsg('bot', r);
-        speak(r);
-        return;
+
+        const response = await reply(text);
+
+        if (response === null) {
+          learningState = { key: normalize(text), original: text };
+          statusEl.textContent = 'Modo aprendizaje...';
+          const r = 'Estoy en modo aprendizaje. No sé qué responder a "' + text + '". Escribe exactamente lo que quieres que yo diga cuando me digas algo así. (O escribe "cancelar" para no enseñarme nada.)';
+          addMsg('bot', r);
+          speak(r);
+          return;
+        }
+
+        addMsg('bot', response);
+        speak(response);
       }
 
-      const response = await reply(text);
+      function sendMessage() {
+        const text = textInput.value.trim();
+        if (!text) return;
+        handleUserMessage(text);
+        textInput.value = '';
+      }
 
-      if (response === null) {
+      sendBtn.addEventListener('click', sendMessage);
+      textInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendMessage();
+      });
+
+      learnBtn.addEventListener('click', function() {
+        const text = textInput.value.trim();
+        if (!text) {
+          const r = 'Escribe primero la frase que quieres que aprenda, y luego pulsa Aprender.';
+          addMsg('bot', r);
+          speak(r);
+          return;
+        }
+        if (learningState) learningState = null;
+        addMsg('user', text);
+        textInput.value = '';
         learningState = { key: normalize(text), original: text };
         statusEl.textContent = 'Modo aprendizaje...';
-        const r = 'Estoy en modo aprendizaje 🤔. No sé qué responder a "' + text + '". Escribe exactamente lo que quieres que yo diga cuando me digas algo así. (O escribe "cancelar" para no enseñarme nada.)';
+        const r = 'Vale, quiero aprender a responder a "' + text + '". ¿Qué debería decir cuando me digas algo así? (Escribe "cancelar" si te arrepientes.)';
         addMsg('bot', r);
         speak(r);
-        return;
-      }
+      });
 
-      addMsg('bot', response);
-      speak(response);
-    }
-
-    function sendMessage() {
-      const text = textInput.value.trim();
-      if (!text) return;
-      handleUserMessage(text);
-      textInput.value = '';
-    }
-
-    sendBtn.addEventListener('click', sendMessage);
-    textInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') sendMessage();
-    });
-
-    learnBtn.addEventListener('click', () => {
-      const text = textInput.value.trim();
-      if (!text) {
-        const r = 'Escribe primero la frase que quieres que aprenda, y luego pulsa 🧠 Aprender.';
-        addMsg('bot', r);
-        speak(r);
-        return;
-      }
-      if (learningState) learningState = null;
-      addMsg('user', text);
-      textInput.value = '';
-      learningState = { key: normalize(text), original: text };
-      statusEl.textContent = 'Modo aprendizaje...';
-      const r = 'Vale, quiero aprender a responder a "' + text + '". ¿Qué debería decir cuando me digas algo así? (Escribe "cancelar" si te arrepientes.)';
-      addMsg('bot', r);
-      speak(r);
-    });
-
-    forgetBtn.addEventListener('click', () => {
-      const cuantas = Object.keys(learned).length;
-      if (cuantas === 0) {
-        const r = 'No hay nada que olvidar en la libreta dinámica. Las reglas fijas del código siguen ahí. 😊';
-        addMsg('bot', r);
-        speak(r);
-        return;
-      }
-      const ok = window.confirm('¿Seguro que quieres borrar las ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + ' aprendidas dinámicamente? (Las reglas fijas no se borran.)');
-      if (!ok) return;
-      learned = {};
-      saveLearned();
-      learningState = null;
-      statusEl.textContent = 'Listo';
-      const r = 'Hecho. He olvidado ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + ' de la libreta dinámica. Las reglas fijas siguen funcionando. 🧽';
-      addMsg('bot', r);
-      speak(r);
-    });
-
-    viewBtn.addEventListener('click', () => {
-      const keys = Object.keys(learned);
-      let out = '';
-      if (keys.length === 0) {
-        out += 'No hay nada aprendido dinámicamente.\n\n';
-      } else {
-        out += 'Aprendido dinámicamente (' + keys.length + '):\n\n';
-        keys.forEach((k, i) => {
-          out += (i + 1) + '. Frase clave: "' + k + '"\n   → Responde: "' + learned[k] + '"\n\n';
-        });
-      }
-      out += '\nReglas fijas en el código: ' + Object.keys(FIXED).length + ' entradas.\n';
-      out += 'Memoria de IA: ' + Math.floor(aiHistory.length / 2) + ' intercambios.';
-      addMono(out.trim());
-    });
-
-    exportBtn.addEventListener('click', () => {
-      const keys = Object.keys(learned);
-      if (keys.length === 0) {
-        const r = 'No hay nada aprendido dinámicamente que exportar. Las reglas fijas ya viven en el código. 😊';
-        addMsg('bot', r);
-        speak(r);
-        return;
-      }
-      const json = JSON.stringify(learned);
-      addMono('Copia este texto y guárdalo donde quieras:\n\n' + json);
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(json).then(() => {
-          statusEl.textContent = 'Copiado al portapapeles';
-          setTimeout(() => { if (!learningState) statusEl.textContent = 'Listo'; }, 2000);
-        }).catch(() => {
-          statusEl.textContent = 'Selecciona y copia a mano';
-          setTimeout(() => { if (!learningState) statusEl.textContent = 'Listo'; }, 2500);
-        });
-      } else {
-        statusEl.textContent = 'Selecciona y copia a mano';
-        setTimeout(() => { if (!learningState) statusEl.textContent = 'Listo'; }, 2500);
-      }
-    });
-
-    importBtn.addEventListener('click', () => {
-      const entrada = window.prompt('Pega aquí el texto que exportaste antes:');
-      if (!entrada) return;
-      let datos;
-      try {
-        datos = JSON.parse(entrada.trim());
-      } catch (e) {
-        const r = 'Eso no parece un JSON válido. Revisa que lo hayas copiado entero.';
-        addMsg('bot', r);
-        speak(r);
-        return;
-      }
-      if (!datos || typeof datos !== 'object' || Array.isArray(datos)) {
-        const r = 'El formato no es el correcto. Debe ser un objeto con pares de frase y respuesta.';
-        addMsg('bot', r);
-        speak(r);
-        return;
-      }
-      const cuantas = Object.keys(datos).length;
-      const ok = window.confirm('Voy a importar ' + cuantas + ' cosa' + (cuantas === 1 ? '' : 's') + '. Se mezclarán con las que ya sé. ¿Seguimos?');
-      if (!ok) return;
-      for (const k in datos) {
-        if (typeof datos[k] === 'string') learned[k] = datos[k];
-      }
-      saveLearned();
-      const r = '¡Importado! Ahora tengo ' + Object.keys(learned).length + ' cosa' + (Object.keys(learned).length === 1 ? '' : 's') + ' aprendida' + (Object.keys(learned).length === 1 ? '' : 's') + ' dinámicamente. 🎉';
-      addMsg('bot', r);
-      speak(r);
-    });
-
-    toggleAIBtn.addEventListener('click', () => {
-      useAI = !useAI;
-      if (useAI) {
-        toggleAIBtn.textContent = '🤖 IA Activada';
-        toggleAIBtn.style.color = '#7038a1';
-        toggleAIBtn.style.borderColor = '#d9d0e0';
-        const r = 'IA activada. Ahora puedo responder a cualquier cosa.';
-        addMsg('bot', r);
-        speak(r);
-      } else {
-        toggleAIBtn.textContent = '🤖 IA Desactivada';
-        toggleAIBtn.style.color = '#b03030';
-        toggleAIBtn.style.borderColor = '#e8c8c8';
-        const r = 'IA desactivada. Vuelvo a responder solo con lo aprendido.';
-        addMsg('bot', r);
-        speak(r);
-      }
-    });
-
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) {
-      statusEl.textContent = 'sin reconocimiento de voz';
-      micBtn.disabled = true;
-    } else {
-      const recognition = new SR();
-      recognition.lang = 'es-ES';
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      let listening = false;
-
-      recognition.onstart = () => {
-        listening = true;
-        micBtn.classList.add('listening');
-        statusEl.textContent = 'Escuchando...';
-      };
-
-      recognition.onresult = (e) => {
-        const transcript = e.results[0][0].transcript;
-        if (transcript) {
-          handleUserMessage(transcript.trim());
+      forgetBtn.addEventListener('click', function() {
+        const cuantas = Object.keys(learned).length;
+        if (cuantas === 0) {
+          const r = 'No hay nada que olvidar en la libreta dinámica.';
+          addMsg('bot', r);
+          speak(r);
+          return;
         }
-      };
+        const ok = window.confirm('¿Seguro que quieres borrar las ' + cuantas + ' cosas aprendidas dinámicamente?');
+        if (!ok) return;
+        learned = {};
+        saveLearned();
+        learningState = null;
+        statusEl.textContent = 'Listo';
+        const r = 'Hecho. He olvidado ' + cuantas + ' cosas de la libreta dinámica.';
+        addMsg('bot', r);
+        speak(r);
+      });
 
-      recognition.onerror = () => {
-        statusEl.textContent = 'Error en micrófono';
-      };
-
-      recognition.onend = () => {
-        listening = false;
-        micBtn.classList.remove('listening');
-        if (!learningState) statusEl.textContent = 'Listo';
-      };
-
-      micBtn.addEventListener('click', () => {
-        if (listening) {
-          recognition.stop();
+      viewBtn.addEventListener('click', function() {
+        const keys = Object.keys(learned);
+        let out = '';
+        if (keys.length === 0) {
+          out += 'No hay nada aprendido dinámicamente.\n\n';
         } else {
-          try {
-            recognition.start();
-          } catch (err) {
-            statusEl.textContent = 'Error';
-          }
+          out += 'Aprendido dinámicamente (' + keys.length + '):\n\n';
+          keys.forEach(function(k, i) {
+            out += (i + 1) + '. Frase clave: "' + k + '"\n   Responde: "' + learned[k] + '"\n\n';
+          });
+        }
+        out += '\nReglas fijas en el código: ' + Object.keys(FIXED).length + ' entradas.\n';
+        out += 'Memoria de IA: ' + Math.floor(aiHistory.length / 2) + ' intercambios.';
+        addMono(out.trim());
+      });
+
+      exportBtn.addEventListener('click', function() {
+        const keys = Object.keys(learned);
+        if (keys.length === 0) {
+          const r = 'No hay nada aprendido dinámicamente que exportar.';
+          addMsg('bot', r);
+          speak(r);
+          return;
+        }
+        const json = JSON.stringify(learned);
+        addMono('Copia este texto y guárdalo:\n\n' + json);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(json).then(function() {
+            statusEl.textContent = 'Copiado al portapapeles';
+            setTimeout(function() { if (!learningState) statusEl.textContent = 'Listo'; }, 2000);
+          }).catch(function() {
+            statusEl.textContent = 'Selecciona y copia a mano';
+            setTimeout(function() { if (!learningState) statusEl.textContent = 'Listo'; }, 2500);
+          });
+        } else {
+          statusEl.textContent = 'Selecciona y copia a mano';
+          setTimeout(function() { if (!learningState) statusEl.textContent = 'Listo'; }, 2500);
         }
       });
+
+      importBtn.addEventListener('click', function() {
+        const entrada = window.prompt('Pega aquí el texto que exportaste antes:');
+        if (!entrada) return;
+        let datos;
+        try {
+          datos = JSON.parse(entrada.trim());
+        } catch (e) {
+          const r = 'Eso no parece un JSON válido.';
+          addMsg('bot', r);
+          speak(r);
+          return;
+        }
+        if (!datos || typeof datos !== 'object' || Array.isArray(datos)) {
+          const r = 'El formato no es el correcto.';
+          addMsg('bot', r);
+          speak(r);
+          return;
+        }
+        const cuantas = Object.keys(datos).length;
+        const ok = window.confirm('Voy a importar ' + cuantas + ' cosas. Se mezclarán con las que ya sé. ¿Seguimos?');
+        if (!ok) return;
+        for (const k in datos) {
+          if (typeof datos[k] === 'string') learned[k] = datos[k];
+        }
+        saveLearned();
+        const r = 'Importado. Ahora tengo ' + Object.keys(learned).length + ' cosas aprendidas dinámicamente.';
+        addMsg('bot', r);
+        speak(r);
+      });
+
+      toggleAIBtn.addEventListener('click', function() {
+        useAI = !useAI;
+        if (useAI) {
+          toggleAIBtn.textContent = '🤖 IA Activada';
+          toggleAIBtn.style.color = '#7038a1';
+          toggleAIBtn.style.borderColor = '#d9d0e0';
+          const r = 'IA activada. Ahora puedo responder a cualquier cosa.';
+          addMsg('bot', r);
+          speak(r);
+        } else {
+          toggleAIBtn.textContent = '🤖 IA Desactivada';
+          toggleAIBtn.style.color = '#b03030';
+          toggleAIBtn.style.borderColor = '#e8c8c8';
+          const r = 'IA desactivada. Vuelvo a responder solo con lo aprendido.';
+          addMsg('bot', r);
+          speak(r);
+        }
+      });
+
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SR) {
+        statusEl.textContent = 'sin reconocimiento de voz';
+        micBtn.disabled = true;
+      } else {
+        const recognition = new SR();
+        recognition.lang = 'es-ES';
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        let listening = false;
+
+        recognition.onstart = function() {
+          listening = true;
+          micBtn.classList.add('listening');
+          statusEl.textContent = 'Escuchando...';
+        };
+
+        recognition.onresult = function(e) {
+          const transcript = e.results[0][0].transcript;
+          if (transcript) {
+            handleUserMessage(transcript.trim());
+          }
+        };
+
+        recognition.onerror = function() {
+          statusEl.textContent = 'Error en micrófono';
+        };
+
+        recognition.onend = function() {
+          listening = false;
+          micBtn.classList.remove('listening');
+          if (!learningState) statusEl.textContent = 'Listo';
+        };
+
+        micBtn.addEventListener('click', function() {
+          if (listening) {
+            recognition.stop();
+          } else {
+            try {
+              recognition.start();
+            } catch (err) {
+              statusEl.textContent = 'Error';
+            }
+          }
+        });
+      }
+    } catch (err) {
+      var eb = document.getElementById('errorBox');
+      if (eb) {
+        eb.style.display = 'block';
+        eb.textContent += 'ERROR AL INICIAR: ' + err.message + '\n';
+      }
     }
   </script>
 </body>
