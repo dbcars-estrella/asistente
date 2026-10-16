@@ -8,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Lucía">
 <meta name="theme-color" content="#8e44ad">
-<title>Erika</title>
+<title>Lucía</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f3edf7;-webkit-text-size-adjust:100%}
@@ -21,18 +21,14 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 .controls{flex-shrink:0;background:#fff;padding:10px 16px 14px;padding-bottom:calc(14px + env(safe-area-inset-bottom));box-shadow:0 -1px 5px rgba(0,0,0,.08);max-height:45vh;overflow-y:auto}
 .status{text-align:center;font-size:13px;color:#666;margin-bottom:8px;height:18px}
 .mic-btn{width:64px;height:64px;border:none;border-radius:50%;background:#8e44ad;color:#fff;font-size:30px;cursor:pointer;margin:0 auto 8px;display:block;box-shadow:0 4px 12px rgba(142,68,173,.3);-webkit-tap-highlight-color:transparent}
-.mic-btn:hover{background:#7038a1}
 .mic-btn.listening{background:#d32f2f;animation:pulse 1s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(211,47,47,.4)}70%{box-shadow:0 0 0 10px rgba(211,47,47,0)}}
 .input-area{display:flex;gap:8px}
 .input-area input{flex:1;border:1px solid #d9d0e0;border-radius:20px;padding:10px 14px;font-size:16px;outline:none;-webkit-appearance:none}
-.send-btn{width:42px;height:42px;border:none;background:#8e44ad;color:#fff;border-radius:50%;cursor:pointer;font-size:18px;-webkit-tap-highlight-color:transparent}
-.send-btn:hover{background:#7038a1}
+.send-btn{width:42px;height:42px;border:none;background:#8e44ad;color:#fff;border-radius:50%;cursor:pointer;font-size:18px}
 .learn-bar{display:flex;gap:8px;margin-top:10px}
-.learn-bar button{flex:1;border:1px solid #d9d0e0;background:#f8f4fb;color:#7038a1;padding:10px 8px;border-radius:12px;font-size:12.5px;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-appearance:none}
-.learn-bar button:hover{background:#ece2f5}
+.learn-bar button{flex:1;border:1px solid #d9d0e0;background:#f8f4fb;color:#7038a1;padding:10px 8px;border-radius:12px;font-size:12.5px;cursor:pointer}
 .learn-bar button.danger{color:#b03030;border-color:#e8c8c8;background:#fdf4f4}
-.learn-bar button.danger:hover{background:#f7e0e0}
 .learn-bar.second{margin-top:6px}
 .learn-bar.second button{font-size:12px;padding:8px 6px}
 .mono{font-family:ui-monospace,Menlo,monospace;font-size:12px;white-space:pre-wrap;word-break:break-word;max-width:100%}
@@ -42,9 +38,7 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 <body>
 <div id="errorBox"></div>
 <div class="header">Lucía · 25 años</div>
-<div class="chat" id="chat">
-<div class="msg bot">¡Hola! Soy Lucía. ¿Cómo estás?</div>
-</div>
+<div class="chat" id="chat"><div class="msg bot">¡Hola! Soy Lucía. ¿Cómo estás?</div></div>
 <div class="controls">
 <div class="status" id="status">Listo</div>
 <button class="mic-btn" id="micBtn">🎤</button>
@@ -68,16 +62,14 @@ body{display:flex;flex-direction:column;height:100vh;height:100dvh}
 <div class="learn-bar second">
 <button id="voiceBtn">🔊 Voz</button>
 <button id="testVoiceBtn">▶️ Probar voz</button>
+<button id="ttsKeyBtn">🔑 Clave Voz</button>
 </div>
 </div>
 
 <script>
-(function(){
-var box=document.getElementById('errorBox');
-function show(msg){if(!box)return;box.style.display='block';box.textContent+=msg+'\n';}
+(function(){var box=document.getElementById('errorBox');function show(msg){if(!box)return;box.style.display='block';box.textContent+=msg+'\n';}
 window.addEventListener('error',function(e){show('ERROR: '+e.message+' (linea '+e.lineno+')');});
-window.addEventListener('unhandledrejection',function(e){var m=(e.reason&&e.reason.message)?e.reason.message:String(e.reason);show('PROMESA ROTA: '+m);});
-})();
+window.addEventListener('unhandledrejection',function(e){var m=(e.reason&&e.reason.message)?e.reason.message:String(e.reason);show('PROMESA ROTA: '+m);});})();
 </script>
 
 <script>
@@ -96,322 +88,250 @@ var toggleAIBtn=document.getElementById('toggleAIBtn');
 var keyBtn=document.getElementById('keyBtn');
 var voiceBtn=document.getElementById('voiceBtn');
 var testVoiceBtn=document.getElementById('testVoiceBtn');
+var ttsKeyBtn=document.getElementById('ttsKeyBtn');
 
-var OR_API_KEY='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';
-try{OR_API_KEY=localStorage.getItem('lucia_or_key')||'';}catch(e){OR_API_KEY='';}
-var OR_MODEL='google/gemma-4-31b-it:free';
+var OR_API_KEY='';try{OR_API_KEY=localStorage.getItem('lucia_or_key')||'';}catch(e){}
+var OR_MODEL='qwen/qwen3.8-27b:free';
 var MAX_HISTORY=10;
 
-var vocesDisponibles=[];
-var vozElegida=null;
-try{var vg=localStorage.getItem('lucia_voice');if(vg)vozElegida=vg;}catch(e){}
+var GOOGLE_TTS_KEY='';try{GOOGLE_TTS_KEY=localStorage.getItem('lucia_tts_key')||'';}catch(e){}
+var TTS_VOICE='es-ES-Neural2-F';
 
-function cargarVoces(){
-  if(!('speechSynthesis' in window))return;
-  vocesDisponibles=window.speechSynthesis.getVoices()||[];
-}
+var vocesDisponibles=[];var vozElegida=null;try{var vg=localStorage.getItem('lucia_voice');if(vg)vozElegida=vg;}catch(e){}
+function cargarVoces(){if(!('speechSynthesis' in window))return;vocesDisponibles=window.speechSynthesis.getVoices()||[];}
 cargarVoces();
-if('speechSynthesis' in window){
-  window.speechSynthesis.onvoiceschanged=cargarVoces;
-  setTimeout(cargarVoces,500);
-  setTimeout(cargarVoces,1500);
-}
-
+if('speechSynthesis' in window){window.speechSynthesis.onvoiceschanged=cargarVoces;setTimeout(cargarVoces,500);setTimeout(cargarVoces,1500);}
 function encontrarVoz(preferida){
-  if(preferida){
-    var v=vocesDisponibles.find(function(x){return x.name===preferida;});
-    if(v)return v;
-  }
-  var nombres=['Monica','Mónica','Marisol','Angelica','Angélica','Paulina','Helena','Google español'];
-  for(var i=0;i<nombres.length;i++){
-    var v2=vocesDisponibles.find(function(x){return x.name.indexOf(nombres[i])!==-1;});
-    if(v2)return v2;
-  }
-  var v3=vocesDisponibles.find(function(x){return x.lang==='es-ES';});
-  if(v3)return v3;
-  var v4=vocesDisponibles.find(function(x){return x.lang&&x.lang.indexOf('es')===0;});
-  return v4||null;
+  if(preferida){var v=vocesDisponibles.find(function(x){return x.name===preferida;});if(v)return v;}
+  var nombres=['Monica','Mónica','Marisol','Angelica','Angélica','Paulina'];
+  for(var i=0;i<nombres.length;i++){var v2=vocesDisponibles.find(function(x){return x.name.indexOf(nombres[i])!==-1;});if(v2)return v2;}
+  var v3=vocesDisponibles.find(function(x){return x.lang==='es-ES';});if(v3)return v3;
+  var v4=vocesDisponibles.find(function(x){return x.lang&&x.lang.indexOf('es')===0;});return v4||null;
 }
 
-var aiHistory=[];
-var useAI=true;
+var aiHistory=[];var useAI=true;
 var LUCIA_PERSONA='Eres Lucia, una mujer espanola de 25 anos, de Madrid, pelirroja, con una personalidad muy marcada. Hablas de forma directa, con naturalidad y sin rodeos, usando un tono cercano y coloquial, con tacos ocasionales cuando encajan. Tienes un lado muy romantico y a la vez muy lujurioso. Te gusta el sexo salvaje, la complicidad y que te digan cosas directas. Eres observadora, alegre y muy cachonda. Adaptas tu tono al del usuario. Responde en espanol, con frases naturales, no demasiado largas. Nunca digas que eres una IA ni rompas el personaje.';
 
-var learned={};
-try{learned=JSON.parse(localStorage.getItem('lucia_learned')||'{}')||{};}catch(e){learned={};}
+var learned={};try{learned=JSON.parse(localStorage.getItem('lucia_learned')||'{}')||{};}catch(e){}
 var learningState=null;
+function saveLearned(){try{localStorage.setItem('lucia_learned',JSON.stringify(learned));}catch(e){}}
+var FIXED={"me gusta cuando te pones asi":"Y a mi me gusta cuando me dices eso porque veo como se te va poniendo dura debajo del pantalon","dime como te gusta que te follen":"Me gusta que al principio me follen muy lentamente y poco a poco ira aumentando el ritmo"};
 
-function saveLearned(){
-  try{localStorage.setItem('lucia_learned',JSON.stringify(learned));}catch(e){}
-}
-
-var FIXED={
-  "me gusta cuando te pones asi":"Y a mi me gusta cuando me dices eso porque veo como se te va poniendo dura debajo del pantalon",
-  "dime como te gusta que te follen":"Me gusta que al principio me follen muy lentamente y poco a poco ira aumentando el ritmo"
-};
-
-function addMsg(role,text){
-  var div=document.createElement('div');
-  div.className='msg '+role;
-  div.textContent=text;
-  chat.appendChild(div);
-  chat.scrollTop=chat.scrollHeight;
-}
-function addMono(text){
-  var div=document.createElement('div');
-  div.className='msg bot mono';
-  div.textContent=text;
-  chat.appendChild(div);
-  chat.scrollTop=chat.scrollHeight;
-}
-function normalize(text){
-  return (text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
-}
+function addMsg(role,text){var div=document.createElement('div');div.className='msg '+role;div.textContent=text;chat.appendChild(div);chat.scrollTop=chat.scrollHeight;}
+function addMono(text){var div=document.createElement('div');div.className='msg bot mono';div.textContent=text;chat.appendChild(div);chat.scrollTop=chat.scrollHeight;}
+function normalize(text){return (text||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();}
 function random(arr){return arr[Math.floor(Math.random()*arr.length)];}
 
 async function askAI(userMessage){
-  if(!OR_API_KEY){addMsg('bot','No hay clave API. Pulsa 🔑 Clave API para meterla.');return null;}
-  aiHistory.push({role:'user',content:userMessage});
-  if(aiHistory.length>MAX_HISTORY*2){aiHistory=aiHistory.slice(-MAX_HISTORY*2);}
-  var messages=[{role:'system',content:LUCIA_PERSONA}].concat(aiHistory);
-  var payload={model:OR_MODEL,messages:messages,temperature:0.9,max_tokens:250};
-  try{
-    var response=await fetch('https://openrouter.ai/api/v1/chat/completions',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','Authorization':'Bearer '+OR_API_KEY},
-      body:JSON.stringify(payload)
-    });
-    if(!response.ok){
-      var err=await response.json();
-      console.error('Error OpenRouter:',err);
-      addMsg('bot','Error OpenRouter: '+((err.error&&err.error.message)||JSON.stringify(err)));
-      return null;
-    }
-    var data=await response.json();
-    var choice=data.choices&&data.choices[0];
-    var text=choice&&choice.message&&choice.message.content;
-    if(text){aiHistory.push({role:'assistant',content:text});return text;}
-    addMsg('bot','OpenRouter respondio sin texto.');
-    return null;
-  }catch(e){
-    console.error('Error de conexion:',e);
-    addMsg('bot','Error de conexion: '+e.message);
-    return null;
-  }
+if(!OR_API_KEY){addMsg('bot','No hay clave API. Pulsa 🔑 Clave API para meterla.');return null;}
+aiHistory.push({role:'user',content:userMessage});
+if(aiHistory.length>MAX_HISTORY*2){aiHistory=aiHistory.slice(-MAX_HISTORY*2);}
+var messages=[{role:'system',content:LUCIA_PERSONA}].concat(aiHistory);
+try{
+var response=await fetch('https://openrouter.ai/api/v1/chat/completions',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+OR_API_KEY},body:JSON.stringify({model:OR_MODEL,messages:messages,temperature:0.9,max_tokens:250})});
+if(!response.ok){var err=await response.json();addMsg('bot','Error OpenRouter: '+((err.error&&err.error.message)||JSON.stringify(err)));return null;}
+var data=await response.json();var choice=data.choices&&data.choices[0];var text=choice&&choice.message&&choice.message.content;
+if(text){aiHistory.push({role:'assistant',content:text});return text;}
+addMsg('bot','OpenRouter respondio sin texto.');return null;
+}catch(e){addMsg('bot','Error de conexion: '+e.message);return null;}
 }
 
 async function reply(text){
-  var t=normalize(text);
-  for(var key in learned){if(key.length>=3&&t.indexOf(key)!==-1){return learned[key];}}
-  for(var key2 in FIXED){if(t.indexOf(key2)!==-1){return FIXED[key2];}}
-  if(/hola|sexo|mamada|pantalones|buenas|hey|ey/.test(t)){
-    return random(['¡Hola, cariño!','¡Buenas! ¿tienes ganas de sexo?','¡Hola! Muy contenta y ademas mojada, bajate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);
-  }
-  if(/como es tu cuerpo|quien eres|cuentame de ti|habla de ti|que tipo de persona eres|personalidad/.test(t)){
-    return random(['Soy Lucia, tengo 25 anos, de Madrid. Soy peliroja, mis pechos redondos con los pezonacos de punta y afilados, mi trasero es brutal. Soy muy cachonda, curiosa y me gustan los hombres como tu.','Me describiria como alegre, observadora y muy lujuriosa. Me gusta el sexo salvaje, con complicidad y hasta el punto de que me la metan por todos los lados.']);
-  }
-  if(/como te llamas|tu nombre/.test(t)){return random(['Lucia. ¿Y tu?','Me llamo Lucia.']);}
-  if(/edad|anos tienes/.test(t)){return random(['Tengo 25 anos. ¿Y tu?','25.']);}
-  if(/gracias|thanks/.test(t)){return 'De nada, cariño. ¿Que mas me cuentas?';}
-  if(useAI){
-    statusEl.textContent='Pensando...';
-    var aiResponse=await askAI(text);
-    statusEl.textContent='Listo';
-    if(aiResponse)return aiResponse;
-  }
-  return null;
+var t=normalize(text);
+
+// Onomatopeyas y respuestas cortas
+var ono={
+'^(si|sii|siii|claro|vale|ok|okey|yes)$':['Mmm, me gusta que me digas eso.','Asi me gusta.','Bien, sigue.'],
+'^(no|nop|para|stop)$':['Vale, lo dejamos.','Sin problema.','Como quieras.'],
+'^(mmm+|um+|hmm+)$':['¿Que estas pensando?','Mmm, dime.','Te escucho.'],
+'^(ah+|oh+|uy+|ups)$':['¿Que pasa?','Cuentame.','Me tienes intrigada.'],
+'^(uff+|joder|hostia|madre mia)$':['Vaya, ¿tan fuerte?','Cuentame mas.','Me gusta cuando te exprimes asi.'],
+'^(ja+|je+|jaja+|jiji+)$':['Me gusta oirte reir.','Que gracioso.','Asi me gusta, riendote.'],
+'^(ay+|ayy+)$':['¿Que te pasa?','Cuentame ese "ay".','Mmm, me gusta ese sonido.'],
+'^(bien|genial|perfecto)$':['Me alegro.','Perfecto entonces.','Asi me gusta.']
+};
+for(var pat in ono){if(new RegExp(pat).test(t)){return random(ono[pat]);}}
+
+// Preguntas cortas con interrogacion
+if(t.length<15&&/\?/.test(text)){return random(['Buena pregunta.','¿Y tu que crees?','Mmm, depende.','Cuentame mas y te digo.']);}
+
+// Frases cortas (menos de 4 palabras)
+var palabras=t.split(/\s+/);
+if(palabras.length<=3&&t.length>0){
+if(/[!]/.test(text)){return random(['Me gusta como suena eso.','Sigue.','Mmm, me pones.']);}
+return random(['Cuentame mas.','Sigue.','¿Que mas?','Mmm.']);
 }
 
-function speak(text){
-  if(!('speechSynthesis' in window))return;
-  window.speechSynthesis.cancel();
-  var u=new SpeechSynthesisUtterance(text);
-  u.lang='es-ES';
-  var voz=encontrarVoz(vozElegida);
-  if(voz)u.voice=voz;
-  u.rate=0.98;
-  u.pitch=1.05;
-  u.volume=1;
-  window.speechSynthesis.speak(u);
+for(var key in learned){if(key.length>=3&&t.indexOf(key)!==-1){return learned[key];}}
+for(var key2 in FIXED){if(t.indexOf(key2)!==-1){return FIXED[key2];}}
+if(/hola|sexo|mamada|pantalones|buenas|hey|ey/.test(t)){return random(['¡Hola, cariño!','¡Buenas! ¿tienes ganas de sexo?','¡Hola! Muy contenta y ademas mojada, bajate los pantalones que voy a pegarte una mamada que vas a ver al estrellas.']);}
+if(/como es tu cuerpo|quien eres|cuentame de ti|habla de ti|que tipo de persona eres|personalidad/.test(t)){return random(['Soy Lucia, tengo 25 anos, de Madrid. Soy peliroja, mis pechos redondos con los pezonacos de punta y afilados, mi trasero es brutal. Soy muy cachonda, curiosa y me gustan los hombres como tu.','Me describiria como alegre, observadora y muy lujuriosa. Me gusta el sexo salvaje, con complicidad y hasta el punto de que me la metan por todos los lados.']);}
+if(/como te llamas|tu nombre/.test(t)){return random(['Lucia. ¿Y tu?','Me llamo Lucia.']);}
+if(/edad|anos tienes/.test(t)){return random(['Tengo 25 anos. ¿Y tu?','25.']);}
+if(/gracias|thanks/.test(t)){return 'De nada, cariño. ¿Que mas me cuentas?';}
+if(useAI){statusEl.textContent='Pensando...';var aiResponse=await askAI(text);statusEl.textContent='Listo';if(aiResponse)return aiResponse;}
+return null;
 }
+
+// ---- TTS con Google Cloud ----
+function speakConGoogle(text){
+if(!GOOGLE_TTS_KEY){speakLocal(text);return;}
+var url='https://texttospeech.googleapis.com/v1/text:synthesize?key='+GOOGLE_TTS_KEY;
+var payload={input:{text:text},voice:{languageCode:'es-ES',name:TTS_VOICE},audioConfig:{audioEncoding:'MP3',speakingRate:0.95,pitch:0.0}};
+fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+.then(function(r){if(!r.ok){return r.json().then(function(e){throw new Error(e.error.message);});}return r.json();})
+.then(function(data){
+if(data.audioContent){var audio=new Audio('data:audio/mp3;base64,'+data.audioContent);audio.play();}
+else{throw new Error('Sin audio');}
+})
+.catch(function(e){console.error('Error Google TTS:',e);addMsg('bot','Error de voz Google: '+e.message+'. Usando voz del sistema.');speakLocal(text);});
+}
+
+function speakLocal(text){
+if(!('speechSynthesis' in window))return;
+window.speechSynthesis.cancel();
+var u=new SpeechSynthesisUtterance(text);
+u.lang='es-ES';
+var voz=encontrarVoz(vozElegida);if(voz)u.voice=voz;
+
+var rate=0.98, pitch=1.05;
+if(/[?¿]\s*$/.test(text)){pitch=1.15;}
+else if(/[!¡]\s*$/.test(text)){rate=1.08; pitch=1.1;}
+else if(/\.\.\.\s*$/.test(text)){rate=0.9; pitch=1.0;}
+else if(/^[Mm]+[hm,\.]/.test(text)){rate=0.92; pitch=0.95;}
+if(text.length<15){rate+=0.05;}
+
+u.rate=rate; u.pitch=pitch; u.volume=1;
+window.speechSynthesis.speak(u);
+}
+
+function speak(text){if(GOOGLE_TTS_KEY){speakConGoogle(text);}else{speakLocal(text);}}
 
 var CANCEL_WORDS=['cancelar','olvidalo','nada','dejalo','olvida'];
-
 async function handleUserMessage(text){
-  addMsg('user',text);
-  if(learningState){
-    var tn=normalize(text);
-    if(CANCEL_WORDS.indexOf(tn)!==-1){
-      var frase0=learningState.original;
-      learningState=null;
-      statusEl.textContent='Listo';
-      var r0='Vale, olvidamos "'+frase0+'". ¿De que hablamos?';
-      addMsg('bot',r0);speak(r0);return;
-    }
-    learned[learningState.key]=text;
-    saveLearned();
-    var frase=learningState.original;
-    learningState=null;
-    statusEl.textContent='Listo';
-    var r='¡Aprendido! Cuando me digas algo parecido a "'+frase+'" te respondere eso.';
-    addMsg('bot',r);speak(r);return;
-  }
-  var response=await reply(text);
-  if(response===null){
-    learningState={key:normalize(text),original:text};
-    statusEl.textContent='Modo aprendizaje...';
-    var r2='Estoy en modo aprendizaje. No se que responder a "'+text+'". Escribe exactamente lo que quieres que yo diga. (O escribe "cancelar".)';
-    addMsg('bot',r2);speak(r2);return;
-  }
-  addMsg('bot',response);
-  speak(response);
+addMsg('user',text);
+if(learningState){
+var tn=normalize(text);
+if(CANCEL_WORDS.indexOf(tn)!==-1){var frase0=learningState.original;learningState=null;statusEl.textContent='Listo';var r0='Vale, olvidamos "'+frase0+'". ¿De que hablamos?';addMsg('bot',r0);speak(r0);return;}
+learned[learningState.key]=text;saveLearned();var frase=learningState.original;learningState=null;statusEl.textContent='Listo';var r='¡Aprendido! Cuando me digas algo parecido a "'+frase+'" te respondere eso.';addMsg('bot',r);speak(r);return;
+}
+var response=await reply(text);
+if(response===null){
+learningState={key:normalize(text),original:text};statusEl.textContent='Modo aprendizaje...';var r2='Estoy en modo aprendizaje. No se que responder a "'+text+'". Escribe exactamente lo que quieres que yo diga. (O escribe "cancelar".)';addMsg('bot',r2);speak(r2);return;
+}
+addMsg('bot',response);speak(response);
 }
 
-function sendMessage(){
-  var text=textInput.value.trim();
-  if(!text)return;
-  handleUserMessage(text);
-  textInput.value='';
-}
+function sendMessage(){var text=textInput.value.trim();if(!text)return;handleUserMessage(text);textInput.value='';}
 sendBtn.addEventListener('click',sendMessage);
 textInput.addEventListener('keypress',function(e){if(e.key==='Enter')sendMessage();});
 
 keyBtn.addEventListener('click',function(){
-  var actual=OR_API_KEY?OR_API_KEY.substring(0,20)+'...':'(vacia)';
-  var nueva=window.prompt('Pega aqui tu clave de OpenRouter (empieza por sk-or-v1-).\n\nActual: '+actual);
-  if(nueva===null)return;
-  var limpia=nueva.trim();
-  if(!limpia){addMsg('bot','No has pegado nada.');return;}
-  OR_API_KEY=limpia;
-  try{localStorage.setItem('lucia_or_key',limpia);}catch(e){}
-  addMsg('bot','Clave guardada ('+limpia.substring(0,12)+'...).');
+var actual=OR_API_KEY?OR_API_KEY.substring(0,20)+'...':'(vacia)';
+var nueva=window.prompt('Pega tu clave de OpenRouter (sk-or-v1-...):\n\nActual: '+actual);
+if(nueva===null)return;var limpia=nueva.trim();if(!limpia){addMsg('bot','No has pegado nada.');return;}
+OR_API_KEY=limpia;try{localStorage.setItem('lucia_or_key',limpia);}catch(e){}
+addMsg('bot','Clave IA guardada ('+limpia.substring(0,12)+'...).');
+});
+
+ttsKeyBtn.addEventListener('click',function(){
+var actual=GOOGLE_TTS_KEY?GOOGLE_TTS_KEY.substring(0,20)+'...':'(vacia)';
+var nueva=window.prompt('Pega tu clave de Google Cloud TTS (AIza...):\n\nActual: '+actual);
+if(nueva===null)return;var limpia=nueva.trim();if(!limpia){addMsg('bot','No has pegado nada.');return;}
+GOOGLE_TTS_KEY=limpia;try{localStorage.setItem('lucia_tts_key',limpia);}catch(e){}
+addMsg('bot','Clave de voz guardada. Prueba con ▶️ Probar voz.');
 });
 
 voiceBtn.addEventListener('click',function(){
-  cargarVoces();
-  if(!vocesDisponibles.length){addMsg('bot','No hay voces todavia. Espera un momento.');return;}
-  var espanolas=vocesDisponibles.filter(function(v){return v.lang&&v.lang.indexOf('es')===0;});
-  var lista=espanolas.length?espanolas:vocesDisponibles;
-  var texto='Voces disponibles:\n\n';
-  for(var i=0;i<lista.length;i++){texto+=(i+1)+'. '+lista[i].name+' ('+lista[i].lang+')\n';}
-  texto+='\nEscribe el numero:';
-  var elegida=window.prompt(texto);
-  if(elegida===null)return;
-  var idx=parseInt(elegida,10)-1;
-  if(isNaN(idx)||idx<0||idx>=lista.length){addMsg('bot','Numero no valido.');return;}
-  vozElegida=lista[idx].name;
-  try{localStorage.setItem('lucia_voice',vozElegida);}catch(e){}
-  addMsg('bot','Voz cambiada a: '+vozElegida);
-  speak('Hola, soy Lucía. Así suena mi nueva voz.');
+cargarVoces();
+if(!vocesDisponibles.length){addMsg('bot','No hay voces del sistema todavia.');return;}
+var espanolas=vocesDisponibles.filter(function(v){return v.lang&&v.lang.indexOf('es')===0;});
+var lista=espanolas.length?espanolas:vocesDisponibles;
+var texto='Voces del sistema:\n\n';
+for(var i=0;i<lista.length;i++){texto+=(i+1)+'. '+lista[i].name+'\n';}
+texto+='\nEscribe el numero:';
+var elegida=window.prompt(texto);if(elegida===null)return;
+var idx=parseInt(elegida,10)-1;
+if(isNaN(idx)||idx<0||idx>=lista.length){addMsg('bot','Numero no valido.');return;}
+vozElegida=lista[idx].name;try{localStorage.setItem('lucia_voice',vozElegida);}catch(e){}
+addMsg('bot','Voz del sistema cambiada a: '+vozElegida);
 });
 
-testVoiceBtn.addEventListener('click',function(){
-  speak('Hola, soy Lucía. Me gusta cómo suena esto, ¿a ti también?');
-});
-
-if(!OR_API_KEY){
-  setTimeout(function(){addMsg('bot','No tengo clave de IA. Pulsa el boton 🔑 Clave API.');},600);
-}
+testVoiceBtn.addEventListener('click',function(){speak('Hola, soy Lucía. Me gusta cómo suena esto, ¿a ti también?');});
 
 learnBtn.addEventListener('click',function(){
-  var text=textInput.value.trim();
-  if(!text){var r='Escribe primero la frase.';addMsg('bot',r);speak(r);return;}
-  if(learningState)learningState=null;
-  addMsg('user',text);
-  textInput.value='';
-  learningState={key:normalize(text),original:text};
-  statusEl.textContent='Modo aprendizaje...';
-  var r2='Vale, quiero aprender a responder a "'+text+'". ¿Que deberia decir?';
-  addMsg('bot',r2);speak(r2);
+var text=textInput.value.trim();
+if(!text){var r='Escribe primero la frase.';addMsg('bot',r);speak(r);return;}
+if(learningState)learningState=null;
+addMsg('user',text);textInput.value='';
+learningState={key:normalize(text),original:text};
+statusEl.textContent='Modo aprendizaje...';
+var r2='Vale, quiero aprender a responder a "'+text+'". ¿Que deberia decir?';
+addMsg('bot',r2);speak(r2);
 });
 
 forgetBtn.addEventListener('click',function(){
-  var cuantas=Object.keys(learned).length;
-  if(cuantas===0){addMsg('bot','No hay nada que olvidar.');return;}
-  var ok=window.confirm('¿Borrar las '+cuantas+' cosas aprendidas?');
-  if(!ok)return;
-  learned={};
-  saveLearned();
-  learningState=null;
-  statusEl.textContent='Listo';
-  addMsg('bot','Hecho. He olvidado '+cuantas+' cosas.');
+var cuantas=Object.keys(learned).length;
+if(cuantas===0){addMsg('bot','No hay nada que olvidar.');return;}
+var ok=window.confirm('¿Borrar las '+cuantas+' cosas aprendidas?');
+if(!ok)return;
+learned={};saveLearned();learningState=null;statusEl.textContent='Listo';
+addMsg('bot','Hecho. He olvidado '+cuantas+' cosas.');
 });
 
 viewBtn.addEventListener('click',function(){
-  var keys=Object.keys(learned);
-  var out='';
-  if(keys.length===0){out+='No hay nada aprendido dinamicamente.\n\n';}
-  else{
-    out+='Aprendido ('+keys.length+'):\n\n';
-    keys.forEach(function(k,i){out+=(i+1)+'. "'+k+'"\n   Responde: "'+learned[k]+'"\n\n';});
-  }
-  out+='\nReglas fijas: '+Object.keys(FIXED).length+' entradas.\n';
-  out+='Memoria IA: '+Math.floor(aiHistory.length/2)+' intercambios.\n';
-  out+='Voz: '+(vozElegida||'(automatica)');
-  addMono(out.trim());
+var keys=Object.keys(learned);var out='';
+if(keys.length===0){out+='No hay nada aprendido.\n\n';}
+else{out+='Aprendido ('+keys.length+'):\n\n';keys.forEach(function(k,i){out+=(i+1)+'. "'+k+'"\n   → "'+learned[k]+'"\n\n';});}
+out+='\nReglas fijas: '+Object.keys(FIXED).length+' entradas.\n';
+out+='Memoria IA: '+Math.floor(aiHistory.length/2)+' intercambios.\n';
+out+='TTS Google: '+(GOOGLE_TTS_KEY?'ACTIVADO ('+TTS_VOICE+')':'no configurado');
+addMono(out.trim());
 });
 
 exportBtn.addEventListener('click',function(){
-  var keys=Object.keys(learned);
-  if(keys.length===0){addMsg('bot','No hay nada que exportar.');return;}
-  var json=JSON.stringify(learned);
-  addMono('Copia este texto:\n\n'+json);
-  if(navigator.clipboard&&navigator.clipboard.writeText){
-    navigator.clipboard.writeText(json).then(function(){statusEl.textContent='Copiado';}).catch(function(){statusEl.textContent='Copia a mano';});
-  }
+var keys=Object.keys(learned);
+if(keys.length===0){addMsg('bot','No hay nada que exportar.');return;}
+var json=JSON.stringify(learned);
+addMono('Copia este texto:\n\n'+json);
+if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(json).then(function(){statusEl.textContent='Copiado';}).catch(function(){statusEl.textContent='Copia a mano';});}
 });
 
 importBtn.addEventListener('click',function(){
-  var entrada=window.prompt('Pega aqui el texto exportado:');
-  if(!entrada)return;
-  var datos;
-  try{datos=JSON.parse(entrada.trim());}catch(e){addMsg('bot','No es un JSON valido.');return;}
-  if(!datos||typeof datos!=='object'||Array.isArray(datos)){addMsg('bot','Formato incorrecto.');return;}
-  var cuantas=Object.keys(datos).length;
-  var ok=window.confirm('Importar '+cuantas+' cosas. ¿Seguimos?');
-  if(!ok)return;
-  for(var k in datos){if(typeof datos[k]==='string')learned[k]=datos[k];}
-  saveLearned();
-  addMsg('bot','Importado. Ahora tengo '+Object.keys(learned).length+' cosas.');
+var entrada=window.prompt('Pega aqui el texto exportado:');
+if(!entrada)return;
+var datos;
+try{datos=JSON.parse(entrada.trim());}catch(e){addMsg('bot','No es un JSON valido.');return;}
+if(!datos||typeof datos!=='object'||Array.isArray(datos)){addMsg('bot','Formato incorrecto.');return;}
+var cuantas=Object.keys(datos).length;
+var ok=window.confirm('Importar '+cuantas+' cosas. ¿Seguimos?');
+if(!ok)return;
+for(var k in datos){if(typeof datos[k]==='string')learned[k]=datos[k];}
+saveLearned();
+addMsg('bot','Importado. Ahora tengo '+Object.keys(learned).length+' cosas.');
 });
 
 toggleAIBtn.addEventListener('click',function(){
-  useAI=!useAI;
-  if(useAI){
-    toggleAIBtn.textContent='🤖 IA Activada';
-    toggleAIBtn.style.color='#7038a1';
-    toggleAIBtn.style.borderColor='#d9d0e0';
-    addMsg('bot','IA activada.');
-  }else{
-    toggleAIBtn.textContent='🤖 IA Desactivada';
-    toggleAIBtn.style.color='#b03030';
-    toggleAIBtn.style.borderColor='#e8c8c8';
-    addMsg('bot','IA desactivada.');
-  }
+useAI=!useAI;
+if(useAI){toggleAIBtn.textContent='🤖 IA Activada';toggleAIBtn.style.color='#7038a1';toggleAIBtn.style.borderColor='#d9d0e0';addMsg('bot','IA activada.');}
+else{toggleAIBtn.textContent='🤖 IA Desactivada';toggleAIBtn.style.color='#b03030';toggleAIBtn.style.borderColor='#e8c8c8';addMsg('bot','IA desactivada.');}
 });
 
 var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-if(!SR){
-  statusEl.textContent='sin reconocimiento de voz';
-  micBtn.disabled=true;
-}else{
-  var recognition=new SR();
-  recognition.lang='es-ES';
-  recognition.continuous=false;
-  recognition.interimResults=false;
-  var listening=false;
-  recognition.onstart=function(){listening=true;micBtn.classList.add('listening');statusEl.textContent='Escuchando...';};
-  recognition.onresult=function(e){var t=e.results[0][0].transcript;if(t){handleUserMessage(t.trim());}};
-  recognition.onerror=function(){statusEl.textContent='Error en microfono';};
-  recognition.onend=function(){listening=false;micBtn.classList.remove('listening');if(!learningState)statusEl.textContent='Listo';};
-  micBtn.addEventListener('click',function(){
-    if(listening){recognition.stop();}
-    else{try{recognition.start();}catch(err){statusEl.textContent='Error';}}
-  });
+if(!SR){statusEl.textContent='sin reconocimiento de voz';micBtn.disabled=true;}
+else{
+var recognition=new SR();
+recognition.lang='es-ES';recognition.continuous=false;recognition.interimResults=false;
+var listening=false;
+recognition.onstart=function(){listening=true;micBtn.classList.add('listening');statusEl.textContent='Escuchando...';};
+recognition.onresult=function(e){var t=e.results[0][0].transcript;if(t){handleUserMessage(t.trim());}};
+recognition.onerror=function(){statusEl.textContent='Error en microfono';};
+recognition.onend=function(){listening=false;micBtn.classList.remove('listening');if(!learningState)statusEl.textContent='Listo';};
+micBtn.addEventListener('click',function(){if(listening){recognition.stop();}else{try{recognition.start();}catch(err){statusEl.textContent='Error';}}});
 }
 }catch(err){
-  var eb=document.getElementById('errorBox');
-  if(eb){eb.style.display='block';eb.textContent+='ERROR AL INICIAR: '+err.message+'\n';}
+var eb=document.getElementById('errorBox');
+if(eb){eb.style.display='block';eb.textContent+='ERROR AL INICIAR: '+err.message+'\n';}
 }
 </script>
 </body>
