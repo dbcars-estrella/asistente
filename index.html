@@ -95,7 +95,7 @@ var OR_MODEL='qwen/qwen3.8-27b:free';
 var MAX_HISTORY=10;
 
 var GOOGLE_TTS_KEY='';try{GOOGLE_TTS_KEY=localStorage.getItem('lucia_tts_key')||'';}catch(e){}
-var TTS_VOICE='es-ES-Neural2-F';
+var TTS_VOICE='es-ES-Neural2-C';
 
 var vocesDisponibles=[];var vozElegida=null;try{var vg=localStorage.getItem('lucia_voice');if(vg)vozElegida=vg;}catch(e){}
 function cargarVoces(){if(!('speechSynthesis' in window))return;vocesDisponibles=window.speechSynthesis.getVoices()||[];}
