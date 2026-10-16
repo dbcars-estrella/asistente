@@ -316,7 +316,18 @@ useAI=!useAI;
 if(useAI){toggleAIBtn.textContent='🤖 IA Activada';toggleAIBtn.style.color='#7038a1';toggleAIBtn.style.borderColor='#d9d0e0';addMsg('bot','IA activada.');}
 else{toggleAIBtn.textContent='🤖 IA Desactivada';toggleAIBtn.style.color='#b03030';toggleAIBtn.style.borderColor='#e8c8c8';addMsg('bot','IA desactivada.');}
 });
-
+// Desbloqueo de audio para iOS
+var audioDesbloqueado = false;
+function desbloquearAudio() {
+  if (audioDesbloqueado) return;
+  // Creamos un objeto de audio vacío (silencio) en el momento del toque
+  var u = new SpeechSynthesisUtterance(' ');
+  u.volume = 0;
+  window.speechSynthesis.speak(u);
+  audioDesbloqueado = true;
+}
+document.body.addEventListener('touchstart', desbloquearAudio, { once: true });
+document.body.addEventListener('click', desbloquearAudio, { once: true });
 var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 if(!SR){statusEl.textContent='sin reconocimiento de voz';micBtn.disabled=true;}
 else{
